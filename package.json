@@ -1,0 +1,35 @@
+{
+  "name": "banking-in-action",
+  "version": "1.0.0",
+  "description": "RxJS in Action sample application",
+  "main": "app.js",
+  "scripts": {
+    "test": "mocha",
+    "start": "npm run lite",
+    "lite": "lite-server"
+  },
+  "keywords": [
+    "sample",
+    "rxjs",
+    "reactive-extensions",
+    "reactive"
+  ],
+  "author": "Paul P. Daniels <paulpdaniels@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^2.0.0",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-jshint": "^2.0.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^2.3.2",
+    "gulp-tslint": "^6.1.1",
+    "gulp-uglify": "^2.0.0",
+    "jshint": "^2.9.3",
+    "lite-server": "^2.2.0"
+  },
+  "dependencies": {
+    "rxjs": "5.0.0-beta.11",
+    "bootstrap": "^3.3.6"
+  }
+}
