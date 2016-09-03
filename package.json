@@ -5,8 +5,10 @@
   "main": "app.js",
   "scripts": {
     "test": "mocha",
-    "start": "npm run lite",
-    "lite": "lite-server"
+    "start": "npm install && bower install && npm run gulp",
+    "lite": "lite-server",
+    "gulp": "gulp"
+
   },
   "keywords": [
     "sample",
@@ -23,7 +25,7 @@
     "gulp-jshint": "^2.0.1",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.3.2",
-    "gulp-tslint": "^6.1.1",
+    "gulp-serve": "^1.4.0",
     "gulp-uglify": "^2.0.0",
     "jshint": "^2.9.3",
     "lite-server": "^2.2.0"

@@ -46,3 +46,7 @@ li.nav-item a:hover {
 table {
     border: solid;
 }
+
+li {
+    list-style-type: none;
+}

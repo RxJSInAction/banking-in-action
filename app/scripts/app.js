@@ -36,7 +36,6 @@ function ApiBuilder(token) {
   };
 }
 
-
 const UserExperience = Rx.Observable.of({userToken: 'abc123'});
 const GuestExperience = Rx.Observable.of({userToken: 'unauthorized'});
 
@@ -52,35 +51,44 @@ function login(credentials) {
   return Rx.Observable.of({ Api });
 }
 
-const transactions = [
-  {description: 'AMEX PAYMENT', amount: 451.43, date: 'PENDING', category: 'Credit/Debit'}
-];
+function getScaffold() {
+  return Rx.Observable.fromPromise(fetch('app/scaffolds/user_experience.json'))
+    .flatMap(x => {
+      return x.json();
+    });
+  // return Rx.Observable.of({});
+}
 
-const transactions2 = [
+const transactions = [
+  {description: 'AMEX PAYMENT', amount: 451.43, date: 'PENDING', category: 'Credit/Debit'},
   {description: 'RENT PAYMENT', amount: 2000.00, date: '6/15/16', category: 'Credit/Debit'}
 ];
 
 const updateTransactions = Rx.Observable.timer(5000)
   .map(_ => {
-    return transactions2.concat(transactions)
+    return transactions
   });
 
 const init = Rx.Observable.fromEvent(window, 'load')
   .flatMapTo(verifyLogin)
   .flatMap(login)
-  .map(({Api}) =>
+  .flatMap(getScaffold, ({Api}, scaffold) => {
+    return {Api, scaffold};
+  })
+  .map(({Api, scaffold}) =>
     React.DOM.div(
       {width: '100%'},
       React.createElement(HeaderComponent, null),
       React.createElement(ActionButtons, {buttons: buttons}),
-      React.createElement(RecentActivity, {transactions: transactions, newActivity: updateTransactions})
+      React.createElement(RecentActivity, {transactions: transactions, newActivity: updateTransactions}),
+      React.createElement(StockList, null)
     )
   )
   .subscribe(theApp =>
     ReactDOM.render(
       theApp,
       document.getElementById('content')
-    ), e => console.error(err));
+    ), err => console.error(err));
 
 
 

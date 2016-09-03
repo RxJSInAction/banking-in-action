@@ -8,6 +8,7 @@ var sass = require('gulp-sass');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
+var serve  = require('gulp-serve');
 
 gulp.task('lint', function() {
   return gulp.src('js/*.js')
@@ -39,6 +40,8 @@ gulp.task('watch', function() {
 });
 
 
+gulp.task('serve', serve('.'));
+
 
 // Default Task
-gulp.task('default', ['lint', 'sass', 'scripts', 'watch']);
+gulp.task('default', ['lint', 'sass', 'scripts', 'serve', 'watch']);
