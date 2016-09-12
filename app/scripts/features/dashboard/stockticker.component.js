@@ -5,83 +5,61 @@
  *  @author Luis Atencio
  */
 
-class SearchEngine {
-  constructor() {
-    this._engine = new Rx.Subject();
-  }
-  search(query) {
-    this._engine.next(query);
-  }
-  get searches() {
-    return this._engine.asObservable();
-  }
-}
-
-class StockStore {
-  constructor() {
-    this._store = new Rx.ReplaySubject([]);
-  }
-  get stocks() {
-    return this._store.asObservable();
-  }
-  addStock(stock) {
-    this._store.next([stock]);
-  }
-}
-
-const Stocks = new StockStore();
-
-Stocks.addStock({name: 'test', value: '40.04'});
-
-const StockList = React.createClass({
+const StockSearch = React.createClass({
   getInitialState() {
-    return {stocks: []};
+    return {matches: []};
   },
   componentDidMount() {
-    this.sub = Stocks.stocks.subscribe(stocks => {
-      this.setState({stocks: stocks});
+    Searches.subscribe(results => {
+      this.setState({matches: results || []});
     });
-    this.searchEngine = new SearchEngine();
-
-    this.searchEngine.searches
-      .filter(x => x.length && x.length > 0)
-      .debounceTime(250)
-      .switchMap(q => {
-        return fetch(`http://finance.yahoo.com/webservice/v1/symbols`);
-      })
-      .subscribe(x => {
-        console.log(x)
-      });
   },
   componentDidUnMount() {
     this.sub.unsubscribe();
   },
   render() {
     return (
-      React.DOM.div(
-        null,
-        React.DOM.div(
-          null,
-          React.DOM.input(
-            {type: 'text', onKeyUp: (e) =>{
-              this.searchEngine.search(e.target.value)
-            }}
-          ),
-          React.DOM.button(
-            null,
-            'Add New'
-          )
-        ),
-        React.DOM.ul(
-          null,
-          this.state.stocks.map((item, key) => {
-            return React.DOM.li(
-              {key: key},
-              `${item.name} - ${item.value}`
-            )
-          })
-        )
+      React.createElement(Typeahead, {suggestions: this.state.matches})
+    );
+  }
+});
+
+const StockTable = React.createClass({
+  getInitialState() {
+    return {stocks: []};
+  },
+  componentDidMount() {
+    Portfolio.subscribe(
+      search => {
+        this.setState({stocks: search});
+      }
+    );
+  },
+  renderHeaders() {
+    const headers = ["Code", "Name", "High", "Low", "Close", "Shares"]
+      .map((title, idx) => React.DOM.th({key: idx}, title));
+
+    return React.DOM.tr(null, headers);
+  },
+  renderItems() {
+    return this.state.stocks.map((tx, idx) => {
+      let {code, name, high, low, close, shares} = tx;
+      return React.DOM.tr({key: idx},
+        React.DOM.td(null, code),
+        React.DOM.td(null, name),
+        React.DOM.td(null, `$${low}`),
+        React.DOM.td(null, `$${high}`),
+        React.DOM.td(null, `$${close}`),
+        React.DOM.td(null, shares)
+      );
+    });
+  },
+  render() {
+    return (
+      React.DOM.table({className: 'table table-hover table-bordered col-xs-6'},
+        React.DOM.tbody(null, this.renderHeaders(), this.renderItems())
       )
     );
   }
+
 });

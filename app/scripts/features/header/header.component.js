@@ -37,8 +37,10 @@ let headers = [
 
 const HeaderLink = props => {
   return React.DOM.li(
-    {className: 'nav-item nav-' + (props.float || 'left'),
-      onClick: () => Router.redirectTo(props.target)},
+    {
+      className: 'nav-item nav-' + (props.float || 'left'),
+      onClick: () => Router.redirectTo(props.target)
+    },
     React.DOM.a(null, props.title)
   );
 };
@@ -46,16 +48,21 @@ const HeaderLink = props => {
 
 const HeaderLinks = React.createClass({
   render() {
-    return React.DOM.ul(
-      {className: 'nav-bar'},
-      this.props.headers.map((header, key) =>
-        React.createElement(HeaderLink,
-          {
-            title: header.title,
-            float: header.float,
-            key: key,
-            target: header.target
-          }
+    return (
+      React.DOM.nav(
+        {className: 'navbar navbar-default'},
+        React.DOM.ul(
+          {className: 'nav-bar'},
+          this.props.headers.map((header, key) =>
+            React.createElement(HeaderLink,
+              {
+                title: header.title,
+                float: header.float,
+                key: key,
+                target: header.target
+              }
+            )
+          )
         )
       )
     );
@@ -67,9 +74,8 @@ const HeaderComponent = React.createClass({
   render() {
     return (
       React.DOM.div(
-        null,
-        React.createElement(HeaderLinks, {headers: headers}),
-        React.createElement(SearchContext, null)
+        {className: 'col-sm-12'},
+        React.createElement(HeaderLinks, {headers: headers})
       )
     );
   }
