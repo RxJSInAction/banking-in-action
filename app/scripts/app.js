@@ -11,12 +11,21 @@
 // 2) Force log-in
 // 3) Use log-in token to get dashboard set-up information
 
+/* Action Items:
+*
+* 1) Data (stocks, accounts, transactions, routing?)
+* 2) Tool to build transaction history
+* 3) Tool to build stock history
+
+* */
+
 var buttons = [
   {
     key: 1,
     title: 'Accounts',
     src: 'app/images/coins.png',
-    target: '/accounts'
+    target: '/accounts',
+    action: ''
   },
   {
     key: 2,
@@ -32,7 +41,8 @@ var buttons = [
 
 function ApiBuilder(token) {
   return {
-    logout() {}
+    logout() {
+    }
   };
 }
 
@@ -46,9 +56,9 @@ const verifyLogin = Rx.Observable.if(
 );
 
 function login(credentials) {
-  let { userToken } = credentials;
+  let {userToken} = credentials;
   let Api = ApiBuilder(userToken);
-  return Rx.Observable.of({ Api });
+  return Rx.Observable.of({Api});
 }
 
 function getScaffold() {
@@ -56,18 +66,7 @@ function getScaffold() {
     .flatMap(x => {
       return x.json();
     });
-  // return Rx.Observable.of({});
 }
-
-const transactions = [
-  {description: 'AMEX PAYMENT', amount: 451.43, date: 'PENDING', category: 'Credit/Debit'},
-  {description: 'RENT PAYMENT', amount: 2000.00, date: '6/15/16', category: 'Credit/Debit'}
-];
-
-const updateTransactions = Rx.Observable.timer(5000)
-  .map(_ => {
-    return transactions
-  });
 
 const init = Rx.Observable.fromEvent(window, 'load')
   .flatMapTo(verifyLogin)
@@ -75,20 +74,41 @@ const init = Rx.Observable.fromEvent(window, 'load')
   .flatMap(getScaffold, ({Api}, scaffold) => {
     return {Api, scaffold};
   })
+  .publishReplay(1);
+
+
+init
   .map(({Api, scaffold}) =>
     React.DOM.div(
-      {width: '100%'},
+      null,
       React.createElement(HeaderComponent, null),
-      React.createElement(ActionButtons, {buttons: buttons}),
-      React.createElement(RecentActivity, {transactions: transactions, newActivity: updateTransactions}),
-      React.createElement(StockList, null)
+      React.createElement(ActionButtons, {buttons: buttons})
     )
   )
-  .subscribe(theApp =>
-    ReactDOM.render(
-      theApp,
-      document.getElementById('content')
-    ), err => console.error(err));
+  .subscribe(
+    theApp => ReactDOM.render(theApp, document.getElementById('content')),
+    err => console.error(err));
+
+init.subscribe(() =>
+  ReactDOM.render(
+    React.DOM.div(
+      null,
+      React.createElement(StockSearch, null),
+      React.createElement(StockTable, null)
+    ),
+    document.getElementById('stocks')
+  )
+);
+
+
+init.subscribe(() =>
+  ReactDOM.render(
+    React.createElement(RecentActivity, {transactions: [], newActivity: Transactions.transactions}),
+    document.getElementById('recent-transactions')
+  )
+);
+
+init.connect();
 
 
 
