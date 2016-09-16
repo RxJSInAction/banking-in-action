@@ -40,8 +40,7 @@ const TransactionActor = new TransactionActions(AppDispatcher);
 const PortfolioTypes = {
   BUY: 'SHARES_BUY',
   SELL: 'SHARES_SELL',
-  ADD: 'ADD_TO_PORTFOLIO',
-  REMOVE: 'REMOVE_FROM_PORTFOLIO'
+  REMOVE: 'SHARES_REMOVE'
 };
 
 class PortfolioActions {
@@ -49,33 +48,27 @@ class PortfolioActions {
     this._dispatcher = dispatcher;
   }
 
-  addToPortfolio(code) {
-    this._dispatcher.dispatch({
-      type: PortfolioTypes.ADD,
-      code
-    });
-  }
-
-  removeFromPortfolio(code) {
-    this._dispatcher.dispatch({
-      type: PortfolioTypes.REMOVE,
-      code
-    });
-  }
-
-  buy(code, shares) {
+  buy(code, units) {
     this._dispatcher.dispatch({
       type: PortfolioTypes.BUY,
       code,
-      shares
+      units
     });
   }
 
-  sell(code, shares) {
+  sell(code, units) {
     this._dispatcher.dispatch({
       type: PortfolioTypes.SELL,
       code,
-      shares
+      units
+    });
+  }
+
+  remove(code, rev) {
+    this._dispatcher.dispatch({
+      type: PortfolioTypes.REMOVE,
+      code,
+      rev
     });
   }
 }

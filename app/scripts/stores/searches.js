@@ -5,6 +5,34 @@
  *  @author Luis Atencio
  */
 'use strict';
+class SearchEngine {
+  constructor() {
+    //Designate a worker for this search engine
+    this._worker = new Worker('/app/scripts/workers/search.js');
+
+    //Listen for responses from the worker
+    this._messages = Rx.Observable.fromEvent(this._work, 'message');
+  }
+
+  newQuery(params) {
+    //The options for the search
+    let {query, options} = params;
+
+    //Generate a new unique id for the search
+    const id = Date.now();
+
+    //Listen for the response from the search
+    let response = this._messages
+      .first(m => m.data.id === id)
+      .pluck('data', 'matches')
+      .publishReplay(1).refCount();
+
+    //Send the search query
+    this._worker.postMessage({query, id, options});
+    return response;
+  }
+}
+
 
 class SearchStore extends Rx.Observable {
   constructor(dispatcher) {

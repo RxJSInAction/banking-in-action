@@ -10,7 +10,7 @@ const StockSearch = React.createClass({
     return {matches: []};
   },
   componentDidMount() {
-    Searches.subscribe(results => {
+    this.sub = Searches.subscribe(results => {
       this.setState({matches: results || []});
     });
   },
@@ -24,33 +24,36 @@ const StockSearch = React.createClass({
   }
 });
 
-const StockTable = React.createClass({
+const PortfolioTable = React.createClass({
   getInitialState() {
-    return {stocks: []};
+    return {portfolio: []};
   },
   componentDidMount() {
-    Portfolio.subscribe(
+    PortfolioUpdates.subscribe(
       search => {
-        this.setState({stocks: search});
+        this.setState({portfolio: search});
       }
     );
   },
   renderHeaders() {
-    const headers = ["Code", "Name", "High", "Low", "Close", "Shares"]
+    const headers = ["Code", "Name", "Close", "Units", "Remove"]
       .map((title, idx) => React.DOM.th({key: idx}, title));
 
     return React.DOM.tr(null, headers);
   },
   renderItems() {
-    return this.state.stocks.map((tx, idx) => {
-      let {code, name, high, low, close, shares} = tx;
+    return this.state.portfolio.map((tx, idx) => {
+      let {code, rev, name, high, low, close, unit} = tx;
       return React.DOM.tr({key: idx},
         React.DOM.td(null, code),
         React.DOM.td(null, name),
-        React.DOM.td(null, `$${low}`),
-        React.DOM.td(null, `$${high}`),
         React.DOM.td(null, `$${close}`),
-        React.DOM.td(null, shares)
+        React.DOM.td(null, unit),
+        React.DOM.td(null,
+          React.DOM.a({onClick: () => PortfolioActor.remove(code, rev) },
+            React.DOM.span({className: 'glyphicon glyphicon-trash'})
+          )
+        )
       );
     });
   },

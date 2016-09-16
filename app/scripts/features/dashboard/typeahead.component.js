@@ -26,7 +26,7 @@ const Typeahead = React.createClass({
             this.props.suggestions.map((s, i) =>
               React.DOM.li({
                 key: i,
-                onClick: e => PortfolioActor.addToPortfolio(s.code)
+                onClick: e => PortfolioActor.buy(s.code, 0)
               }, s.code)
             )
           )

@@ -94,7 +94,7 @@ init.subscribe(() =>
     React.DOM.div(
       null,
       React.createElement(StockSearch, null),
-      React.createElement(StockTable, null)
+      React.createElement(PortfolioTable, null)
     ),
     document.getElementById('stocks')
   )

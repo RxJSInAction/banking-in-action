@@ -43,4 +43,4 @@ class BalanceStore extends Rx.Observable {
   }
 }
 
-const Balances = new BalanceStore(accountsDb);
+const Balances = new BalanceStore(DB.accounts);

@@ -6,33 +6,31 @@
  */
 'use strict';
 
-const portfolioDB = new PouchDB('portfolio');
-
 class PortfolioStore extends Rx.Observable {
   constructor(dispatcher) {
     super();
+    const unitLens = R.lensProp('unit');
+
     this._source = dispatcher
       .flatMap(action => {
         switch(action.type) {
           case PortfolioTypes.BUY:
-            // return portfolioDB.putIfNotExists(action.code, {})
+            return DB.portfolio.upsert(action.code, doc =>
+              R.over(unitLens, R.compose(R.defaultTo(0), R.add(action.units)), doc)
+            );
             break;
           case PortfolioTypes.SELL:
-            break;
-          case PortfolioTypes.ADD:
-            return portfolioDB.putIfNotExists(action.code, {shares: 0});
+            return DB.portfolio.upsert(action.code, doc =>
+              R.over(unitLens, R.compose(R.defaultTo(0), R.subtract(R.__, action.units)), doc)
+            );
             break;
           case PortfolioTypes.REMOVE:
-            return portfolioDB.delete(action.code);
+            return DB.portfolio.remove(action.code, action.rev);
             break;
           default:
             return Rx.Observable.empty();
         }
       })
-      .flatMap(
-        success => portfolioDB.allDocs({include_docs: true}),
-        (success, {rows}) => rows.map(({doc}) => ({shares: doc.shares, code: doc._id}))
-      )
       .share();
   }
 
@@ -42,3 +40,25 @@ class PortfolioStore extends Rx.Observable {
 }
 
 const Portfolio = new PortfolioStore(AppDispatcher);
+Portfolio.subscribe();
+
+
+Rx.Observable.fromDBChanges = function dbChanges(db, opts, selector) {
+  let changes = db.changes(opts);
+  return Rx.Observable.fromEvent(changes, 'change', selector);
+};
+
+const PortfolioUpdates =
+  Rx.Observable.fromDBChanges(DB.portfolio, {since: 'now', live: true})
+    .startWith(null)
+    .flatMapTo(
+      Rx.Observable.defer(() => DB.portfolio.allDocs({include_docs: true})),
+      (_, x) => R.view(R.lensProp('rows'), x)
+    )
+    .map(toModel)
+    .publishReplay(1)
+    .refCount();
+
+function toModel(rows) {
+  return rows.map(({doc: {_id, _rev, unit}}) => ({code: _id, rev: _rev, unit}))
+}

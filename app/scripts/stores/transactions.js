@@ -12,9 +12,8 @@ const TransactionTypes = {
   TRANSFER: 'transfer'
 };
 
-const accountsDb = new PouchDB('accounts');
-accountsDb.putIfNotExists('checking', {balance: 40.0});
-accountsDb.putIfNotExists('savings', {balance: 40.0});
+DB.accounts.putIfNotExists('checking', {balance: 40.0});
+DB.accounts.putIfNotExists('savings', {balance: 40.0});
 
 /**
  *
@@ -26,12 +25,12 @@ accountsDb.putIfNotExists('savings', {balance: 40.0});
  */
 function transact({name, accountId, type}, op) {
   return Rx.Observable.of(accountId)
-    .flatMap(id => accountsDb.get(id))
+    .flatMap(id => DB.accounts.get(id))
     .filter(doc => !!doc)
     .flatMap(({_id, _rev, balance}) =>
       Rx.Observable.if(
         () => op(balance) >= 0,
-        Rx.Observable.defer(() => accountsDb.put({_id, _rev, balance: op(balance)})),
+        Rx.Observable.defer(() => DB.accounts.put({_id, _rev, balance: op(balance)})),
         Rx.Observable.throw(new Error('Insufficient funds!'))
       )
     );
@@ -46,17 +45,17 @@ function deposit({name, accountId, amount}) {
 }
 
 function transfer({sourceId, destinationId, amount}) {
-  let from$ = Rx.Observable.of(sourceId).flatMap(id => accountsDb.get(id));
-  let to$   = Rx.Observable.of(destinationId).flatMap(id => accountsDb.get(id));
+  let from$ = Rx.Observable.of(sourceId).flatMap(id => DB.accounts.get(id));
+  let to$   = Rx.Observable.of(destinationId).flatMap(id => DB.accounts.get(id));
   let amount$ = Rx.Observable.of(amount);
   return Rx.Observable.zip(to$, from$, amount$, (to, from, amount) => ({to, from, amount}))
     .filter(({to, from}) => !!to && !!from)
     .flatMap(({from, amount}) =>
-        accountsDb.put({_id: from._id, _rev: from._rev, balance: R.subtract(from.balance, amount)}),
+        DB.accounts.put({_id: from._id, _rev: from._rev, balance: R.subtract(from.balance, amount)}),
       (tx) => tx
     )
     .flatMap(({to, amount}) =>
-      accountsDb.put({_id: to._id, _rev: to._rev, balance: R.add(to.balance, amount)})
+      DB.accounts.put({_id: to._id, _rev: to._rev, balance: R.add(to.balance, amount)})
     );
 }
 
@@ -71,7 +70,6 @@ class Transaction {
   get _id() {
     return `${this.name}_${this.type}_${this.timestamp}`;
   }
-
 }
 
 /**
