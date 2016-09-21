@@ -9,14 +9,14 @@ const futureNYSE = fetch('/resources/dictionary.json')
   .then(resp => resp.json());
 
 self.onmessage = function(e) {
-  let { query, id, options: { limit, skip, exactMatch } } = e.data;
+  let { query, id, options: { limit, skip, exact } } = e.data;
   const lcQuery = query.toLowerCase();
 
-  let matcher = !exactMatch ?
+  let matcher = !exact ?
     (target, query) => target.toLowerCase().indexOf(query) > -1 :
     (target, query) => target.toLowerCase() === query;
 
-  exactMatch && (limit = 1);
+  exact && (limit = 1);
 
   futureNYSE.then(result => {
       //Pre-allocate the match result

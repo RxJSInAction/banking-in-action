@@ -5,42 +5,70 @@
  *  @author Luis Atencio
  */
 'use strict';
+const SET_BALANCE = 'SET_BALANCE';
 
-class BalanceStore extends Rx.Observable {
-  constructor(db) {
-    super();
-    this._db = db;
-    let changes = this._db.changes({
-      since: 'now',
-      live: true,
-      include_docs: true
-    });
+function processPayment(transaction) {
+  return R.merge({type: SET_BALANCE}, transaction);
+}
 
-    const asBalance = (account) => (source) =>
-      source.filter(doc => doc.id === account)
-        .pluck('doc');
+function accounts(state = {checking: 100, savings: 100}, action) {
+  const accountLens = R.lensProp(action.account);
 
-    let balanceChanges = Rx.Observable.fromEvent(changes, 'change');
-
-    let checkingsBalanceChanged = balanceChanges.let(asBalance('checking'));
-    let savingsBalanceChanged = balanceChanges.let(asBalance('savings'));
-
-    this._balances = Rx.Observable.combineLatest(
-      Rx.Observable.concat(db.get('checking'), checkingsBalanceChanged),
-      Rx.Observable.concat(db.get('savings'), savingsBalanceChanged),
-      (checking, savings) => ({checking: checking.balance, savings: savings.balance})
-    )
-      .publishReplay(1)
-      .refCount();
-  }
-
-  _subscribe(observer) {
-    return this._balances.subscribe(observer);
-  }
-
-  get balances() {
-    return this._balances;
+  switch (action.type) {
+    case SET_BALANCE:
+      return R.set(accountLens, action.balance, state);
+    default:
+      return state;
   }
 }
 
-const Balances = new BalanceStore(DB.accounts);
+function __payment(account, amount) {
+  return source => source
+    .take(1)
+    .map(({accounts}) => {
+      const accountLens = R.lensProp(account);
+      const newBalance = R.add(amount, R.view(accountLens, accounts));
+
+      return {
+        account,
+        amount,
+        balance: newBalance
+      };
+    })
+}
+
+function deposit(store, account, amount) {
+  return store.let(__payment(account, amount))
+    .do(transaction => {
+      dispatch(processPayment(transaction), addTransaction(transaction));
+      console.log(`Deposited ${amount} into ${account}`);
+    }, err => {
+      dispatch(displayMessage('Could not process request!', 'danger'));
+    }, () => {
+      dispatch(displayMessage('Deposit successful!'));
+    });
+}
+
+function withdraw(store, account, amount) {
+  return store.let(__payment(account, -amount))
+    .flatMap(transaction => {
+      const { balance } = transaction;
+      if (balance < 0)
+        return Rx.Observable.throw(new Error('Insufficient funds!'));
+      return Rx.Observable.of(transaction);
+    })
+    .do(transaction => {
+      dispatch(processPayment(transaction));
+      dispatch(addTransaction(transaction));
+      console.log(`Withdrew ${amount} from ${account}`);
+    }, err => {
+      dispatch(displayMessage('Insufficient funds!', 'danger'));
+    }, () => {
+      dispatch(displayMessage('Withdraw successful'));
+    });
+}
+
+
+
+
+

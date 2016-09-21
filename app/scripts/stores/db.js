@@ -15,3 +15,8 @@ const DB = (function (tables) {
   'portfolio'
 ]);
 
+
+Rx.Observable.fromDBChanges = function dbChanges(db, opts, selector) {
+  let changes = db.changes(opts);
+  return Rx.Observable.fromEvent(changes, 'change', selector);
+};

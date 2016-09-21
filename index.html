@@ -16,45 +16,38 @@
   <script src="bower_components/react/react-dom.js"></script>
   <script src="bower_components/pouchdb/dist/pouchdb.js"></script>
   <script src="bower_components/pouchdb-upsert/dist/pouchdb.upsert.js"></script>
+  <script src="bower_components/react-bootstrap/react-bootstrap.min.js"></script>
   <!--<script src="bower_components/react-router/scripts/build.js"></script>-->
   <!-- IE required polyfill -->
 
 
 </head>
 <body>
-<div class="container" id="content">
 
-</div>
-<div class="container jumbotron" id="account-balances">
-</div>
 <div class="container">
-  <div class="h3">Stock Watch</div>
-  <div id="stocks">
+  <div id="message-center"></div>
+</div>
 
-  </div>
-</div>
-<div class="container">
-  <div class="h3">Recent Transactions</div>
-  <div id="recent-transactions">
-  </div>
-</div>
+<div id="root"></div>
+
+
 
 <!-- Components -->
+<script src="app/scripts/util/store.js"></script>
+<script src="app/scripts/util/combiner.js"></script>
+<script src="app/scripts/util/searchengine.js"></script>
 <script src="app/scripts/stores/db.js"></script>
-<script src="app/scripts/dispatcher/dispatcher.js"></script>
+<script src="app/scripts/stores/messages.js"></script>
 <script src="app/scripts/stores/transactions.js"></script>
 <script src="app/scripts/stores/balances.js"></script>
 <script src="app/scripts/stores/searches.js"></script>
 <script src="app/scripts/stores/portfolio.js"></script>
-<script src="app/scripts/actions/search.actions.js"></script>
-<script src="app/scripts/actions/transaction.actions.js"></script>
-<script src="app/scripts/features/dashboard/typeahead.component.js"></script>
-<script src="app/scripts/features/dashboard/actionbutton.component.js"></script>
+<script src="app/scripts/stores/store.js"></script>
 
-<script src="app/scripts/features/header/header.component.js"></script>
-
-<script src="app/scripts/features/dashboard/portfolio.component.js"></script>
-<script src="app/scripts/features/dashboard/dashboard.component.js"></script>
+<script src="app/scripts/components/typeahead.component.js"></script>
+<script src="app/scripts/components/header.component.js"></script>
+<script src="app/scripts/components/portfolio.component.js"></script>
+<script src="app/scripts/components/dashboard.component.js"></script>
 
 <!-- 2. Load our 'modules' -->
 <script src="app/scripts/app.js"></script>

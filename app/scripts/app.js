@@ -5,7 +5,7 @@
  *  @author Luis Atencio
  */
 'use strict';
-
+(function() {
 // Start configuration step here
 // 1) Check logged in status
 // 2) Force log-in
@@ -19,98 +19,62 @@
 
 * */
 
-var buttons = [
-  {
-    key: 1,
-    title: 'Accounts',
-    src: 'app/images/coins.png',
-    target: '/accounts',
-    action: ''
-  },
-  {
-    key: 2,
-    title: 'Transfers',
-    target: '/transfers'
-  },
-  {
-    key: 3,
-    title: 'Investments',
-    target: '/investments'
-  }
-];
+const { div } = React.DOM;
+const { render } = ReactDOM;
+const { createElement } = React;
+const { Observable } = Rx;
 
-function ApiBuilder(token) {
-  return {
-    logout() {
-    }
-  };
-}
-
-const UserExperience = Rx.Observable.of({userToken: 'abc123'});
-const GuestExperience = Rx.Observable.of({userToken: 'unauthorized'});
-
-const verifyLogin = Rx.Observable.if(
-  () => true,
-  UserExperience,
-  GuestExperience
-);
-
-function login(credentials) {
-  let {userToken} = credentials;
-  let Api = ApiBuilder(userToken);
-  return Rx.Observable.of({Api});
-}
-
-function getScaffold() {
-  return Rx.Observable.fromPromise(fetch('app/scaffolds/user_experience.json'))
-    .flatMap(x => {
-      return x.json();
-    });
-}
-
-const init = Rx.Observable.fromEvent(window, 'load')
-  .flatMapTo(verifyLogin)
-  .flatMap(login)
-  .flatMap(getScaffold, ({Api}, scaffold) => {
-    return {Api, scaffold};
-  })
-  .publishReplay(1);
-
-
-init
-  .map(({Api, scaffold}) =>
-    React.DOM.div(
-      null,
-      React.createElement(HeaderComponent, null),
-      React.createElement(ActionButtons, {buttons: buttons})
-    )
-  )
+Observable.fromEvent(window, 'load')
   .subscribe(
-    theApp => ReactDOM.render(theApp, document.getElementById('content')),
-    err => console.error(err));
+    () => {
+      const rootNode = document.getElementById('root');
 
-init.subscribe(() =>
-  ReactDOM.render(
-    React.DOM.div(
-      null,
-      React.createElement(StockSearch, null),
-      React.createElement(PortfolioTable, null)
-    ),
-    document.getElementById('stocks')
-  )
-);
+      const AccountBalanceComponent = React.createClass({
+        getInitialState() {
+          return {checking: 0, savings: 0}
+        },
+        componentDidMount() {
+          this.props.store.distinctUntilKeyChanged('accounts')
+            .map(({accounts}) => accounts)
+            .subscribe(({checking, savings}) => this.setState({checking, savings}))
+        },
+        render() {
+          const { Panel } = ReactBootstrap;
+          return (
+            createElement(Panel, null,
+              React.createElement(BalanceComponent, {balance: this.state.checking, name: 'Checking'}),
+              React.createElement(BalanceComponent, {balance: this.state.savings, name: 'Savings'})
+            )
+          )
+        }
+      });
 
+      const App = React.createClass({
+        render() {
+          const { Grid, Panel } = ReactBootstrap;
+          const { store } = this.props;
+          return React.createElement(
+            Grid, null,
+            React.createElement(MessageList, {store}),
+            React.createElement(NavigationComponent, {headers: headers}),
+            React.createElement(AccountBalanceComponent, {store}),
+            React.createElement(Panel, {header: 'Portfolio'},
+              createElement(StockSearch, {store}),
+              createElement(FilteredItemView, {store}),
+              createElement(PortfolioTable, {store})
+            ),
+            React.createElement(Panel, {header: 'Recent Transactions'},
+              createElement(RecentActivity, {transactions: transactions, store})
+            )
+          );
+        }
+      });
 
-init.subscribe(() =>
-  ReactDOM.render(
-    React.createElement(RecentActivity, {transactions: [], newActivity: Transactions.transactions}),
-    document.getElementById('recent-transactions')
-  )
-);
-
-init.connect();
-
-
-
-
-
+      //Render the headers
+      render(
+        React.createElement(App, {store: app}),
+        rootNode);
+    },
+    err => console.error(err)
+    );
+})();
