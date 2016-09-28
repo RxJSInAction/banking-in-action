@@ -20,6 +20,7 @@
     "react": "~15.3.1",
     "react-router": "~2.7.0",
     "pouchdb": "~6.0.4",
-    "pouchdb-upsert": "~2.0.1"
+    "pouchdb-upsert": "~2.0.1",
+    "react-bootstrap": "~0.30.3"
   }
 }

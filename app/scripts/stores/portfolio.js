@@ -5,40 +5,94 @@
  *  @author Luis Atencio
  */
 'use strict';
+const REMOVE_FROM_PORTFOLIO = 'REMOVE_FROM_PORTFOLIO';
+const UPDATE_STOCK = 'UPDATE_STOCK';
 
-const portfolioDB = new PouchDB('portfolio');
+function portfolio(state = {}, action) {
 
-class PortfolioStore extends Rx.Observable {
-  constructor(dispatcher) {
-    super();
-    this._source = dispatcher
-      .flatMap(action => {
-        switch(action.type) {
-          case PortfolioTypes.BUY:
-            // return portfolioDB.putIfNotExists(action.code, {})
-            break;
-          case PortfolioTypes.SELL:
-            break;
-          case PortfolioTypes.ADD:
-            return portfolioDB.putIfNotExists(action.code, {shares: 0});
-            break;
-          case PortfolioTypes.REMOVE:
-            return portfolioDB.delete(action.code);
-            break;
-          default:
-            return Rx.Observable.empty();
-        }
-      })
-      .flatMap(
-        success => portfolioDB.allDocs({include_docs: true}),
-        (success, {rows}) => rows.map(({doc}) => ({shares: doc.shares, code: doc._id}))
-      )
-      .share();
-  }
-
-  _subscribe(observer) {
-    return this._source.subscribe(observer);
+  switch (action.type) {
+    case UPDATE_STOCK:
+      const itemLens = R.lensPath([action.code]);
+      return R.set(itemLens, action.units, state);
+    case REMOVE_FROM_PORTFOLIO:
+      return R.omit([action.code], state);
+    default:
+      return state;
   }
 }
 
-const Portfolio = new PortfolioStore(AppDispatcher);
+function updateStock(code, units) {
+  return {type: UPDATE_STOCK, code, units};
+}
+
+function removeStock(code) {
+  return {type: REMOVE_FROM_PORTFOLIO, code};
+}
+
+function buyShares(store, code, units) {
+  // Get the current state of the application
+  const current = store.take(1);
+
+  //Get data on the shares we want to buy
+  const codeSearch = search(code, {exact: true});
+
+  return Rx.Observable.zip(current, codeSearch,
+    ({portfolio}, [stock]) => ({portfolio, stock})
+  )
+    .flatMap(({portfolio, stock: {code, close}}) => {
+      const stockLens = R.lensPath([code, 'units']);
+      const current = R.view(stockLens, portfolio);
+      return withdraw(store, 'checking', close * units)
+      // Here we know the withdraw was successful so go ahead and increase the shares
+        .mapTo(R.add(units, R.defaultTo(0)(current)))
+
+        // Notify the application that units have been purchased
+        .do(units => dispatch(updateStock(code, units)));
+    });
+}
+
+function sellShares(store, code, units) {
+  // Get the current state of the application
+  const current = store.take(1);
+
+  //Get data on the shares we want to buy
+  const codeSearch = search(code, {exact: true});
+
+  return Rx.Observable.zip(current, codeSearch,
+    ({portfolio}, [{code, close}]) => ({portfolio, code, close})
+  )
+    .flatMap(({portfolio, code, close}) => {
+      const stockLens = R.lensProp(code);
+      const current = R.view(stockLens, portfolio);
+      return deposit(store, 'checking', close * units)
+      // Here we know the deposit was successful so go ahead and increase the shares
+        .mapTo(R.add(-units, R.defaultTo(0)(current)))
+        // Notify the application that units have been purchased
+        .do(units =>
+          dispatch(updateStock(code, units))
+        );
+    });
+}
+
+function sellAllShares(store, code) {
+  const current = store.take(1);
+
+  const codeSearch = search(code, {exact: true});
+
+  return Rx.Observable.zip(current, codeSearch,
+    ({portfolio}, [{code, close}]) => ({portfolio, code, close})
+  )
+    .flatMap(({portfolio, code, close}) => {
+      const codeLens = R.lensProp(code);
+      const current = R.view(codeLens, portfolio);
+      return deposit(store, 'checking', close * current)
+    })
+    .do(() => dispatch(removeStock(code)))
+}
+
+
+
+
+
+
+
