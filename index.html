@@ -5,8 +5,9 @@
   <title>Banking in Action</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">-->
+  <link rel="stylesheet" href="vendor/styles/bootstrap-darkly.min.css">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
 
   <!-- 1. Load libraries -->
   <script src="vendor/Rx.umd.js"></script>
@@ -17,7 +18,7 @@
   <script src="bower_components/pouchdb/dist/pouchdb.js"></script>
   <script src="bower_components/pouchdb-upsert/dist/pouchdb.upsert.js"></script>
   <script src="bower_components/react-bootstrap/react-bootstrap.min.js"></script>
-  <!--<script src="bower_components/react-router/scripts/build.js"></script>-->
+  <script src="bower_components/redux/index.js"></script>
   <!-- IE required polyfill -->
 
 
@@ -32,24 +33,25 @@
 
 
 
-<!-- Components -->
-<script src="app/scripts/util/store.js"></script>
-<script src="app/scripts/util/combiner.js"></script>
+<!-- Utilities -->
 <script src="app/scripts/util/searchengine.js"></script>
-<script src="app/scripts/stores/db.js"></script>
-<script src="app/scripts/stores/messages.js"></script>
-<script src="app/scripts/stores/transactions.js"></script>
-<script src="app/scripts/stores/balances.js"></script>
-<script src="app/scripts/stores/searches.js"></script>
-<script src="app/scripts/stores/portfolio.js"></script>
-<script src="app/scripts/stores/store.js"></script>
+<script src="app/scripts/util/createDispatcher.js"></script>
 
-<script src="app/scripts/components/typeahead.component.js"></script>
+<!-- Services -->
+<script src="app/scripts/db.js"></script>
+<script src="app/scripts/actions.js"></script>
+<script src="app/scripts/reducers.js"></script>
+<script src="app/scripts/streams.js"></script>
+
+<!-- Components -->
+<script src="app/scripts/components/accounts.component.js"></script>
 <script src="app/scripts/components/header.component.js"></script>
+<script src="app/scripts/components/message.component.js"></script>
 <script src="app/scripts/components/portfolio.component.js"></script>
-<script src="app/scripts/components/dashboard.component.js"></script>
+<script src="app/scripts/components/transaction.component.js"></script>
+<script src="app/scripts/components/typeahead.component.js"></script>
 
-<!-- 2. Load our 'modules' -->
+<!-- 2. Load our 'app' -->
 <script src="app/scripts/app.js"></script>
 
 

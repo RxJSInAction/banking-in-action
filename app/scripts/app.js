@@ -19,9 +19,6 @@
 
 * */
 
-const { div } = React.DOM;
-const { render } = ReactDOM;
-const { createElement } = React;
 const { Observable } = Rx;
 
 Observable.fromEvent(window, 'load')
@@ -29,50 +26,25 @@ Observable.fromEvent(window, 'load')
     () => {
       const rootNode = document.getElementById('root');
 
-      const AccountBalanceComponent = React.createClass({
-        getInitialState() {
-          return {checking: 0, savings: 0}
-        },
-        componentDidMount() {
-          this.props.store.distinctUntilKeyChanged('accounts')
-            .map(({accounts}) => accounts)
-            .subscribe(({checking, savings}) => this.setState({checking, savings}))
-        },
-        render() {
-          const { Panel } = ReactBootstrap;
-          return (
-            createElement(Panel, null,
-              React.createElement(BalanceComponent, {balance: this.state.checking, name: 'Checking'}),
-              React.createElement(BalanceComponent, {balance: this.state.savings, name: 'Savings'})
-            )
-          )
-        }
-      });
-
       const App = React.createClass({
         render() {
-          const { Grid, Panel } = ReactBootstrap;
+          const { Grid } = ReactBootstrap;
           const { store } = this.props;
           return React.createElement(
             Grid, null,
-            React.createElement(MessageList, {store}),
+            React.createElement(MessageComponent, {store}),
             React.createElement(NavigationComponent, {headers: headers}),
             React.createElement(AccountBalanceComponent, {store}),
-            React.createElement(Panel, {header: 'Portfolio'},
-              createElement(StockSearch, {store}),
-              createElement(FilteredItemView, {store}),
-              createElement(PortfolioTable, {store})
-            ),
-            React.createElement(Panel, {header: 'Recent Transactions'},
-              createElement(RecentActivity, {transactions: transactions, store})
-            )
+            React.createElement(AccountWithdrawComponent, {store}),
+            React.createElement(PortfolioComponent, {store}),
+            React.createElement(TransactionsComponent, {store})
           );
         }
       });
 
-      //Render the headers
-      render(
-        React.createElement(App, {store: app}),
+      //Render the Application
+      ReactDOM.render(
+        React.createElement(App, {store: dispatcher.stream$}),
         rootNode);
     },
     err => console.error(err)

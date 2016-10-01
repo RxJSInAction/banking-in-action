@@ -5,7 +5,7 @@
  *  @author Luis Atencio
  */
 
-const futureNYSE = fetch('/resources/dictionary.json')
+const futureCorpus = fetch('/resources/dictionary.json')
   .then(resp => resp.json());
 
 self.onmessage = function(e) {
@@ -18,7 +18,7 @@ self.onmessage = function(e) {
 
   exact && (limit = 1);
 
-  futureNYSE.then(result => {
+  futureCorpus.then(result => {
       //Pre-allocate the match result
       let matches = new Array(limit || 10);
 

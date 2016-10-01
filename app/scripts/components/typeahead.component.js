@@ -6,6 +6,10 @@
  */
 (function () {
 
+  const searchActions = {
+    startSearch: (value) => dispatcher.dispatch(initiateSearch(value))
+  };
+
   const ItemComponent = ({code, close}) => {
     const {Button, Badge} = ReactBootstrap;
     return (
@@ -38,28 +42,13 @@
 
     });
 
-  const Typeahead = window.Typeahead = React.createClass({
-    componentDidMount() {
-      this._sub = app
-        .distinctUntilChanged(null, ({searches: {query}}) => query)
-        .pluck('searches', 'query')
-        .flatMap(
-          value => search(value, {limit: 20}),
-          (query, results) => ({query, results}))
-        .subscribe(({results}) => {
-          dispatch(updateSearchResults(results))
-        });
-    },
-    componentWillUnmount() {
-      this._sub.unsubscribe();
-    },
-    render() {
-      const {FormControl} = ReactBootstrap;
-      return (
-        React.createElement(FormControl, {autoComplete: 'off',
-          onChange: (e) => dispatch(initiateSearch(e.target.value))
-        })
-      );
-    }
-  });
+  const Typeahead = window.Typeahead = () => {
+    const {FormControl} = ReactBootstrap;
+    return (
+      React.createElement(FormControl, {
+        autoComplete: 'off',
+        onChange: (e) => searchActions.startSearch(e.target.value)
+      })
+    );
+  };
 })();

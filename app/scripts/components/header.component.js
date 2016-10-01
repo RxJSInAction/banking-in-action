@@ -36,7 +36,7 @@ let headers = [
 
 const {Navbar, NavItem, Nav} = ReactBootstrap;
 
-const NavigationComponent = (props) =>
+window.NavigationComponent = (props) =>
   React.createElement(
     Navbar,
     null,
