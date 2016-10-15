@@ -12,7 +12,6 @@ const DB = (function (tables) {
 })([
   'accounts',
   'transactions',
-  'portfolio'
 ]);
 
 
