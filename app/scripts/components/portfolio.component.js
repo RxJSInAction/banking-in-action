@@ -24,7 +24,7 @@
     },
     render() {
       return (
-        React.createElement(Typeahead, {suggestions: this.state.matches, store: this.props.store})
+        React.createElement(Typeahead, {store: this.props.store, app: this.props.app})
       );
     }
   });
@@ -61,20 +61,6 @@
       return {portfolio: []};
     },
     componentDidMount() {
-      this.props.store
-        .distinctUntilChanged(null, ({portfolio}) => portfolio)
-        .flatMap(({portfolio}) => {
-          return Rx.Observable.from(R.toPairs(portfolio))
-            .concatMap(
-              ([code, units]) => search(code, {exact: true}),
-              ([code, units], [{name, close}]) => ({code, units, name, close})
-            )
-            .toArray();
-        })
-        .subscribe(portfolio => {
-          this.setState({portfolio});
-        })
-
     },
     renderHeaders() {
       const headers = this.headers
@@ -108,12 +94,12 @@
   window.PortfolioComponent = (props) => {
     const { createElement } = React;
     const { Panel } = ReactBootstrap;
-    const { store } = props;
+    const { store, app } = props;
 
     return (
       React.createElement(
         Panel, { header: 'Portfolio' },
-        createElement(StockSearch, {store}),
+        createElement(StockSearch, {store, app}),
         createElement(FilteredItemView, {store})
       )
     );

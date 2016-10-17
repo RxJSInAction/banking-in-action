@@ -22,6 +22,8 @@
     "pouchdb": "~6.0.4",
     "pouchdb-upsert": "~2.0.1",
     "react-bootstrap": "~0.30.3",
-    "redux": "https://npmcdn.com/redux/dist/redux.js"
+    "redux": "https://npmcdn.com/redux/dist/redux.js",
+    "mocha": "~3.1.2",
+    "chai": "~3.5.0"
   }
 }

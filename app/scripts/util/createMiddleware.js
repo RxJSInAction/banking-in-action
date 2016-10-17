@@ -9,21 +9,22 @@
 
 // A custom utility operator for only accepting messages
 // of a certain type
+  /**
+   * @param target {string}
+   * @returns {function(Observable<T>): Observable<R>}
+   */
   function ofType(target) {
-    return source => source.filter(({type}) => type === target);
+    return ({type}) => type === target;
   }
 
-  function createDispatcher(store) {
+  function createMiddleware(store, streams$) {
 
-    const subscription = new Rx.Subscription();
+    const {Subscription, Observable} = Rx;
 
-    const store$ = Rx.Observable.create(observer => {
-      const subscription = store.subscribe(() => {
-        observer.next(store.getState());
-      });
+    const subscription = new Subscription();
 
-      return new Rx.Subscription(() => subscription());
-    })
+    const store$ = Rx.Observable.from(store)
+      .map(() => store.getState())
       .publishBehavior(store.getState());
 
     const actionSubject = new Rx.Subject();
@@ -38,9 +39,15 @@
 
     subscription.add(store$.connect());
 
-    function include(processor) {
-      const newStream$ = processor(action$, store$);
-      actionSubject.next(newStream$);
+    if (streams$) {
+      include(streams$);
+    }
+
+    function include(processors) {
+      processors.forEach(p => {
+        const stream$ = p(action$, store$);
+        actionSubject.next(stream$);
+      });
     }
 
     function dispatch(action) {
@@ -58,7 +65,7 @@
 
   root.DispatcherUtils =  {
     ofType,
-    createDispatcher
+    createMiddleware
   };
 
 })(window);
