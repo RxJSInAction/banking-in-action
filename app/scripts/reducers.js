@@ -8,19 +8,18 @@
 const {combineReducers} = Redux;
 
 // Create a single reducer out of the sub-reducers
-const bankingApp = combineReducers({
+const rootReducer = combineReducers({
   accounts,
   transactions,
   searches,
   messages
 });
 
-function accounts(state = {checking: 100, savings: 100}, action) {
-  const accountLens = R.lensProp(action.account);
 
+function accounts(state = {checking: 100, savings: 100}, action) {
   switch (action.type) {
     case SET_BALANCE:
-      return R.set(accountLens, action.balance, state);
+      return R.merge(state, action.balances);
     default:
       return state;
   }
@@ -28,13 +27,16 @@ function accounts(state = {checking: 100, savings: 100}, action) {
 
 function messages(state = [], action) {
   switch (action.type) {
-    case DISPLAY_MESSAGE:
-      return [...state, action.message];
-    case DEGRADE_MESSAGES:
-      const factorLens = R.lensProp('duration');
-      return state
-        .map(message => R.over(factorLens, R.add(-action.factor), message))
-        .filter(message => message.duration > 0);
+    // case DISPLAY_MESSAGE:
+    //   return [...state, action.message];
+    case UPDATE_MESSAGE:
+      const index = R.findIndex(R.propEq('id', action.message.id))(state);
+      return index > -1 ?
+        R.update(index, action.message, state) :
+        [...state, action.message];
+    case REMOVE_MESSAGE:
+      const isExpired = (msg) => msg.id !== action.id;
+      return R.filter(isExpired, state);
     default:
       return state;
   }

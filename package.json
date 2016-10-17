@@ -18,6 +18,7 @@
   "author": "Paul P. Daniels <paulpdaniels@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "chai": "^3.5.0",
     "concurrently": "^2.0.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
@@ -27,7 +28,8 @@
     "gulp-serve": "^1.4.0",
     "gulp-uglify": "^2.0.0",
     "jshint": "^2.9.3",
-    "lite-server": "^2.2.0"
+    "lite-server": "^2.2.0",
+    "mocha": "^3.1.2"
   },
   "dependencies": {
     "bootstrap": "^3.3.6",
