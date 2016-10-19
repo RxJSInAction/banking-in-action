@@ -15,7 +15,7 @@
     },
     componentDidMount() {
 
-      this.sub = this.props.store
+      this.sub = this.props.state
         .distinctUntilKeyChanged('transactions')
         .pluck('transactions')
         .map(({skip, limit, transactions}) => {

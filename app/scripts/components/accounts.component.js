@@ -73,7 +73,7 @@
       return {checking: 0, savings: 0};
     },
     componentDidMount() {
-      this.props.store
+      this.props.state
         .distinctUntilKeyChanged('accounts')
         .pluck('accounts')
         .subscribe(({checking, savings}) =>

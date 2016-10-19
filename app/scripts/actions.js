@@ -14,11 +14,18 @@ const PROCESS_TRANSACTION = 'PROCESS_TRANSACTION';
 const UPDATE_AMOUNT = 'UPDATE_AMOUNT';
 const UPDATE_ACCOUNT = 'UPDATE_ACCOUNT';
 
-const setBalance = (accounts) =>
-  ({type: SET_BALANCE, balances: accounts});
+const setBalance = (balances) =>
+  ({type: SET_BALANCE, balances});
 
 const refreshBalances = () =>
   ({type: REFRESH_BALANCES});
+
+const balanceActions = {
+  withdraw: () => ({type: PROCESS_TRANSACTION, factor: -1}),
+  deposit: () => ({type: PROCESS_TRANSACTION, factor: 1}),
+  amount: (value) => ({type: UPDATE_AMOUNT, amount: value}),
+  account: (value = 'checking') => ({type: UPDATE_ACCOUNT, account: value})
+};
 
 /**
  * MESSAGES

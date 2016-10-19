@@ -56,22 +56,22 @@
         const App = React.createClass({
           render() {
             const {Grid} = ReactBootstrap;
-            const {store, app} = this.props;
+            const {state, app} = this.props;
             return React.createElement(
               Grid, null,
-              React.createElement(MessageComponent, {store}),
+              React.createElement(MessageComponent, {state}),
               React.createElement(NavigationComponent, {headers: headers}),
-              React.createElement(AccountBalanceComponent, {store}),
-              React.createElement(AccountWithdrawComponent, {store, app}),
-              React.createElement(PortfolioComponent, {store, app}),
-              React.createElement(TransactionsComponent, {store})
+              React.createElement(AccountBalanceComponent, {state}),
+              React.createElement(AccountWithdrawComponent, {state, app}),
+              React.createElement(PortfolioComponent, {state, app}),
+              React.createElement(TransactionsComponent, {state})
             );
           }
         });
 
         //Render the Application
         ReactDOM.render(
-          React.createElement(App, {store: app.stream$, app: app}),
+          React.createElement(App, {state: app.getState$(), app: app}),
           rootNode);
       },
       err => console.error(err)

@@ -7,13 +7,6 @@
 
 const {ofType} = DispatcherUtils;
 
-const balanceActions = {
-  withdraw: () => ({type: PROCESS_TRANSACTION, factor: -1}),
-  deposit: () => ({type: PROCESS_TRANSACTION, factor: 1}),
-  amount: (value) => ({type: UPDATE_AMOUNT, amount: value}),
-  account: (value = 'checking') => ({type: UPDATE_ACCOUNT, account: value})
-};
-
 function handleSearch(action$, state$) {
   return action$
     .filter(ofType(INVOKE_SEARCH))
@@ -108,20 +101,15 @@ function handleTransaction(actions$, store$) {
     .let(toTransaction(balances));
 }
 
-function toTransaction(balances) {
+function toTransaction(balance$) {
   return source => {
     // Guarantee that each transaction gets executed in order
-    return source.concatMap(({account, amount, factor, assoc}) => {
-        return balances
-        // Handles the recursion from reprocessing balances
-          .observeOn(Rx.Scheduler.asap)
-          // Take the first balance to match against
-          .take(1)
-          // Extract the account we are interested in
+    return source.withLatestFrom(balance$)
+      .concatMap(([{account, amount, factor, assoc}, balances]) => {
+        return Rx.Observable.of(balances)
           .pluck(account)
           // Compute the new balance and emit actions
           .flatMap(balance => {
-
             //Detect an overdraft
             if (factor < 0 && balance < amount) {
               throw new Error('Insufficient funds!');

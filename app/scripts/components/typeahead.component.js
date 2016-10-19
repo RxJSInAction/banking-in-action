@@ -20,7 +20,7 @@
         return {items: []};
       },
       componentDidMount() {
-        this.props.store
+        this.props.state
           .distinctUntilKeyChanged('searches')
           .pluck('searches', 'results')
           .subscribe(results => this.setState({items: results}))

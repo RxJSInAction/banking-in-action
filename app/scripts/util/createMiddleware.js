@@ -5,13 +5,13 @@
  *  @author Luis Atencio
  */
 
-(function(root) {
+(function (root) {
 
 // A custom utility operator for only accepting messages
 // of a certain type
   /**
    * @param target {string}
-   * @returns {function(Observable<T>): Observable<R>}
+   * @returns {function(*): boolean}
    */
   function ofType(target) {
     return ({type}) => type === target;
@@ -19,51 +19,35 @@
 
   function createMiddleware(store, streams$) {
 
-    const {Subscription, Observable} = Rx;
+    const {Subject, Observable} = Rx;
 
-    const subscription = new Subscription();
-
-    const store$ = Rx.Observable.from(store)
+    const store$ = Observable.from(store)
       .map(() => store.getState())
       .publishBehavior(store.getState());
 
-    const actionSubject = new Rx.Subject();
-    const action$ = actionSubject
-      .flatMap(stream$ => stream$)
-      .publish()
-      .refCount();
+    const input$ = new Subject();
 
-    subscription.add(
-      action$.subscribe(next => store.dispatch(next))
-    );
+    const dispatch = (value) => input$.next(value);
+    const getState$ = () => store$;
+
+    const subscription =
+      Observable.merge(
+        ...streams$.map(processor => processor(input$, store$))
+      )
+        .do(input$)
+        .subscribe(action => store.dispatch(action));
 
     subscription.add(store$.connect());
 
-    if (streams$) {
-      include(streams$);
-    }
-
-    function include(processors) {
-      processors.forEach(p => {
-        const stream$ = p(action$, store$);
-        actionSubject.next(stream$);
-      });
-    }
-
-    function dispatch(action) {
-      actionSubject.next([action]);
-    }
-
     return {
-      include: include,
       dispatch: dispatch,
-      stream$: store$,
+      getState$: getState$,
       unsubscribe: () => subscription.unsubscribe()
     };
 
   }
 
-  root.DispatcherUtils =  {
+  root.DispatcherUtils = {
     ofType,
     createMiddleware
   };
