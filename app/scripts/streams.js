@@ -7,18 +7,19 @@
 
 const {ofType} = DispatcherUtils;
 
-function handleSearch(action$, state$) {
+/**
+ * SEARCH
+ */
+function search$(action$) {
   return action$
     .filter(ofType(INVOKE_SEARCH))
     .debounceTime(500)
     .switchMap(
       ({query}) => search(query, {limit: 20})
-    ).map(
-      results => updateSearchResults(results)
-    )
+    ).map(updateSearchResults);
 }
 
-function updateMessages(actions$, store$) {
+function message$(actions$) {
   return actions$
     .filter(ofType(DISPLAY_MESSAGE))
     .flatMap(
@@ -34,100 +35,82 @@ function updateMessages(actions$, store$) {
     );
 }
 
-const initializeBalances = (DB) => (action$) => {
-  const getBalances$ = Rx.Observable.defer(() => DB.accounts.get('accounts'))
-    .catch(() => Rx.Observable.of({checking: 0, savings: 0}))
-    .map(balances => setBalance(balances));
-
-
-  return Rx.Observable.concat(
-    getBalances$,
-    action$.filter(ofType(REFRESH_BALANCES))
-      .flatMapTo(getBalances$)
-  );
-};
-
-function processUserTransaction(actions$) {
-  const do$ = actions$.filter(ofType(PROCESS_TRANSACTION)).pluck('factor');
-  const amount$ = actions$.filter(ofType(UPDATE_AMOUNT))
-    .pluck('amount')
-    .map(x => typeof x === 'number' ? x : parseInt(x));
-  const account$ = actions$.filter(ofType(UPDATE_ACCOUNT)).pluck('account');
-
-  return do$.withLatestFrom(amount$, account$, (factor, amount, account) =>
-    newTransaction(account, amount, factor))
-}
-
-function updateDBBalances(action$, store$) {
-  return store$
-    .distinctUntilKeyChanged('accounts')
-    .pluck('accounts')
-    .flatMap(accounts => {
-      const {checking, savings, _rev} = accounts;
-      const db = DB.accounts;
-      return db.put({_id: 'accounts', _rev, checking, savings});
+function initialize$() {
+  return getAccounts()
+    .catch(err => {
+      const defaults = {checking: 100, savings: 100};
+      return accountsDB.put('accounts', defaults)
+        .then(() => defaults);
     })
+    .map(accounts => {
+      const {checking, savings} = accounts;
+      return setBalances({checking, savings});
+    });
 }
 
-function computeInterest(trigger$, principle$) {
-  return trigger$
-    .switchMapTo(
-      principle$.take(1),
-      (_, balance) => {
-        const roundedBalance = +((0.1 / 365 * balance).toFixed(2));
-        return newTransaction('savings', roundedBalance, 1)
-      }
+const byField = (expected) => ({field}) => expected === field;
+
+function userTransaction$(action$) {
+
+  const field$ = action$.filter(ofType(SET_TRANSACTION_FIELD));
+
+  const amount$ = field$.filter(byField('amount')).pluck('value');
+  const account$ = field$.filter(byField('account')).pluck('value');
+
+  return action$
+    .filter(ofType(PROCESS_TRANSACTION))
+    .pluck('value')
+    .withLatestFrom(
+      amount$,
+      account$,
+      (factor, amount, account) => newTransaction(account, amount, factor)
     );
+}
+
+function computeInterest(principle) {
+  const rounded = +((0.1 / 365 * principle).toFixed(2));
+  return newTransaction('savings', rounded, 1);
 }
 
 // Processes interest payments
-function processInterest(action$, store$, scheduler) {
-
-  // Need the current savings balance to compute interest
-  const savingsBalance$ = store$
-    .distinctUntilKeyChanged('accounts')
-    .pluck('accounts', 'savings');
-
-  // Compute interest every 15 seconds
-  return computeInterest(Rx.Observable.interval(15000), savingsBalance$);
+function interest$(action$, store$, scheduler) {
+  return Rx.Observable.interval(15000)
+    .switchMap(
+      () => getAccounts().pluck('savings')
+    ).map(computeInterest);
 }
 
-// Processes a transaction operation
-function handleTransaction(actions$, store$) {
-  const balances = store$.distinctUntilKeyChanged('accounts').pluck('accounts');
+// Compute a transaction
+function computeTransaction(tx, doc) {
+  const {amount, account, factor} = tx;
 
-  return actions$
-    .filter(ofType(NEW_TRANSACTION))
-    .let(toTransaction(balances));
+  const target = doc[account];
+
+  const newBalance = target + amount * factor;
+
+  return Rx.Observable.if(
+    () => factor < 0 && newBalance < 0,
+    Rx.Observable.throw(new Error('Insufficient Balance')),
+    Rx.Observable.of(Object.assign({}, doc, {[account]: newBalance}))
+  );
 }
 
-function toTransaction(balance$) {
-  return source => {
-    // Guarantee that each transaction gets executed in order
-    return source.withLatestFrom(balance$)
-      .concatMap(([{account, amount, factor}, balances]) => {
-        return Rx.Observable.of(balances)
-          .pluck(account)
-          // Compute the new balance and emit actions
-          .flatMap(balance =>
-            Rx.Observable.if(
-              //Detect an overdraft
-              () => factor < 0 && balance < amount,
-              Rx.Observable.throw(new Error('Insufficient funds!')),
-              Rx.Observable.of(balance)
-                .map(principle => principle + amount * factor)
-                .flatMap(newBalance => [
-                  setBalance({[account]: newBalance}),
-                  addTransaction({
-                    balance: newBalance,
-                    amount,
-                    account,
-                    factor
-                  })
-              ])))
-          // Handle a transaction error by sending an error action
-          .catch(err => Rx.Observable.of(displayMessage(err.message, 'danger')));
-      }
-    );
-  };
+function getAccounts() {
+  return Rx.Observable.fromPromise(accountsDB.get('accounts'));
+}
+
+function updateBalances(futureTx) {
+  return futureTx.flatMap(
+    tx => Rx.Observable.fromPromise(accountsDB.put(tx)),
+    ({checking, savings}, resp) => setBalances({checking, savings})
+  ).catch(
+    err => Rx.Observable.of(displayMessage(err.message, 'danger'))
+  );
+}
+
+//TODO Get this working with transaction log again
+function transaction$(action$) {
+  return action$.filter(ofType(NEW_TRANSACTION))
+    .concatMap(getAccounts, computeTransaction)
+    .flatMap(updateBalances);
 }

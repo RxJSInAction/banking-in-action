@@ -35,13 +35,12 @@
   };
 
   const middlewareFactories = [
-    handleSearch,
-    updateMessages,
-    processUserTransaction,
-    processInterest,
-    handleTransaction
-    // initializeBalances
-    // updateDBBalances
+    initialize$,
+    search$,
+    message$,
+    userTransaction$,
+    interest$,
+    transaction$
   ];
 
   // Builds the global store with reducers and an initial state
