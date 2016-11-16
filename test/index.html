@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Suite</title>
+  <link href="../bower_components/mocha/mocha.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div id="mocha"></div>
+
+<!--<script src="https://cdn.rawgit.com/jquery/jquery/2.1.4/dist/jquery.min.js"></script>-->
+<script src="../vendor/Rx.umd.js"></script>
+<script src="../bower_components/chai/chai.js"></script>
+<script src="../bower_components/mocha/mocha.js"></script>
+<script>mocha.setup('bdd')</script>
+
+<!-- Sources -->
+<script src="../app/scripts/util/createMiddleware.js"></script>
+<script src="../app/scripts/actions.js"></script>
+<script src="../app/scripts/streams.js"></script>
+
+<!-- Scripts -->
+<script src="test.balance.js"></script>
+
+<script>
+//  mocha.checkLeaks();
+  mocha.globals(['Rx']);
+  mocha.run();
+</script>
+</body>
+</html>

@@ -8,9 +8,9 @@
 
   const Message = (props) => {
     const {Alert} = ReactBootstrap;
-    const {severity, text, duration} = props.message;
+    const {severity, text, opacity} = props.message;
     return (
-      React.createElement(Alert, {bsStyle: severity, style: {opacity: duration}}, text)
+      React.createElement(Alert, {bsStyle: severity, style: {opacity}}, text)
     );
   };
 
@@ -19,9 +19,10 @@
       return {messages: []};
     },
     componentDidMount() {
-      this.props.store
+      this.props.state
         .distinctUntilKeyChanged('messages')
-        .subscribe(({messages}) => {
+        .pluck('messages')
+        .subscribe(messages => {
           this.setState({messages});
         })
     },

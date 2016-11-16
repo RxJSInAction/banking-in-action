@@ -4,7 +4,7 @@
  *  @author Paul Daniels
  *  @author Luis Atencio
  */
-(function() {
+(function () {
 
   const BalanceComponent = window.BalanceComponent = (props) => {
     const {div, h1, h3} = React.DOM;
@@ -13,8 +13,8 @@
     return (
       React.createElement(
         Col, {xs: 6},
-          h3(null, `${props.name}:`),
-          h1(null, `$${props.balance.toFixed(2)}`)
+        h3(null, `${props.name}:`),
+        h1(null, `$${props.balance.toFixed(2)}`)
       )
     );
   };
@@ -23,6 +23,8 @@
     componentDidMount() {
     },
     render() {
+      const {dispatch} = this.props.app;
+      const {amount, withdraw, deposit, account} = balanceActions;
       const {Panel, FormGroup, InputGroup, FormControl, Col, ControlLabel, Button, ButtonToolbar, Radio, RadioGroup} = ReactBootstrap;
       return (
         React.createElement(Panel, null,
@@ -31,16 +33,30 @@
               React.createElement(Col, {xs: 3},
                 React.createElement(InputGroup, null,
                   React.createElement(InputGroup.Addon, null, '$'),
-                  React.createElement(FormControl, {type: 'number', onChange: (e) => balanceActions.amount(e.target.value)})
+                  React.createElement(FormControl, {
+                    type: 'number',
+                    onChange: (e) => dispatch(amount(e.target.value))
+                  })
                 )
               ),
               React.createElement(Col, {xs: 6},
                 React.createElement(ButtonToolbar, null,
-                  React.createElement(Button, {bsStyle: 'primary', onClick: () => balanceActions.withdraw()}, 'Withdraw'),
-                  React.createElement(Button, {bsStyle: 'primary', onClick: () => balanceActions.deposit()}, 'Deposit'),
+                  React.createElement(Button, {
+                    bsStyle: 'primary',
+                    onClick: () => dispatch(withdraw())
+                  }, 'Withdraw'),
+                  React.createElement(Button, {bsStyle: 'primary', onClick: () => dispatch(deposit())}, 'Deposit'),
                   React.createElement(FormGroup, {},
-                    React.createElement(Radio, {name: 'account', inline: true, onChange: () => balanceActions.account('checking')}, 'Checking'),
-                    React.createElement(Radio, {name: 'account', inline: true, onChange: () => balanceActions.account('savings')}, 'Savings')
+                    React.createElement(Radio, {
+                      name: 'account',
+                      inline: true,
+                      onChange: () => dispatch(account('checking'))
+                    }, 'Checking'),
+                    React.createElement(Radio, {
+                      name: 'account',
+                      inline: true,
+                      onChange: () => account('savings')
+                    }, 'Savings')
                   )
                 )
               )
@@ -57,7 +73,7 @@
       return {checking: 0, savings: 0};
     },
     componentDidMount() {
-      this.props.store
+      this.props.state
         .distinctUntilKeyChanged('accounts')
         .pluck('accounts')
         .subscribe(({checking, savings}) =>
@@ -65,7 +81,7 @@
         );
     },
     render() {
-      const { Panel } = ReactBootstrap;
+      const {Panel} = ReactBootstrap;
       return (
         React.createElement(Panel, null,
           React.createElement(BalanceComponent, {balance: this.state.checking, name: 'Checking'}),
@@ -74,7 +90,6 @@
       )
     }
   });
-
 
 
 })();

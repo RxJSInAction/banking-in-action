@@ -5,63 +5,45 @@
  *  @author Luis Atencio
  */
 
-const {combineReducers} = Redux;
+// Utilities to make it easier to access certain values
+const accountsLens = R.lensProp('accounts');
+const messagesLens = R.lensProp('messages');
+const resultsLens = R.lensProp('results');
+const transactionsLens = R.lensProp('transactions');
+const queryLens = R.lensProp('query');
 
-// Create a single reducer out of the sub-reducers
-const bankingApp = combineReducers({
-  accounts,
-  transactions,
-  searches,
-  messages
-});
-
-function accounts(state = {checking: 100, savings: 100}, action) {
-  const accountLens = R.lensProp(action.account);
-
-  switch (action.type) {
-    case SET_BALANCE:
-      return R.set(accountLens, action.balance, state);
-    default:
-      return state;
-  }
-}
-
-function messages(state = [], action) {
-  switch (action.type) {
+function reducer(state = {
+  accounts: {checking: 0, savings: 0},
+  messages: [],
+  results: [],
+  transactions: [],
+  skip: 0,
+  limit: 10,
+  query: ''
+}, action) {
+  switch(action.type) {
+    case SET_BALANCES:
+      const newAccountState = R.merge(R.view(accountsLens, state), action.balances);
+      return R.set(accountsLens, newAccountState, state);
     case DISPLAY_MESSAGE:
-      return [...state, action.message];
-    case DEGRADE_MESSAGES:
-      const factorLens = R.lensProp('duration');
-      return state
-        .map(message => R.over(factorLens, R.add(-action.factor), message))
-        .filter(message => message.duration > 0);
-    default:
-      return state;
-  }
-}
-
-function searches(state = {query: '', results: []}, action) {
-  switch (action.type) {
+      const index = R.findIndex(R.propEq('id', action.message.id))(state);
+      const newMessageState = index > -1 ?
+        R.update(index, action.message, state) : [...state, action.message];
+      return R.set(messagesLens, newMessageState, state);
+    case REMOVE_MESSAGE:
+      const isExpired = (msg) => msg.id !== action.id;
+      const nonExpiredMessages = R.filter(isExpired, state);
+      return R.set(messagesLens, nonExpiredMessages, state);
     case INVOKE_SEARCH:
-      const queryLens = R.lensProp('query');
       return R.set(queryLens, action.query, state);
     case CLEAR_SEARCH:
-      return R.set(R.lensProp('results'), [], state);
+      return R.set(resultsLens, [], state);
     case SET_SEARCH_RESULTS:
-      return R.set(R.lensProp('results'), action.results, state);
-    default:
-      return state;
-  }
-}
-
-const transactionLens = R.lensProp('transactions');
-
-function transactions(state = {}, action) {
-  switch (action.type) {
+      return R.set(resultsLens, action.results, state);
     case ADD_TRANSACTION:
-      return R.over(transactionLens, R.prepend(action.transaction), state);
-    case CHANGE_VIEW:
-      return R.merge(state, R.pick(['skip', 'limit'], action));
+      return R.over(transactionsLens, R.prepend(action.transaction), state);
+    // case CHANGE_VIEW:
+    //   return R.merge(state, R.pick(['skip', 'limit'], action));
     default:
       return state;
   }
