@@ -21,8 +21,8 @@
       },
       componentDidMount() {
         this.props.state
-          .distinctUntilKeyChanged('searches')
-          .pluck('searches', 'results')
+          .distinctUntilKeyChanged('results')
+          .pluck('results')
           .subscribe(results => this.setState({items: results}))
       },
       render() {

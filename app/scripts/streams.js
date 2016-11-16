@@ -105,35 +105,26 @@ function toTransaction(balance$) {
   return source => {
     // Guarantee that each transaction gets executed in order
     return source.withLatestFrom(balance$)
-      .concatMap(([{account, amount, factor, assoc}, balances]) => {
+      .concatMap(([{account, amount, factor}, balances]) => {
         return Rx.Observable.of(balances)
           .pluck(account)
           // Compute the new balance and emit actions
-          .flatMap(balance => {
-            //Detect an overdraft
-            if (factor < 0 && balance < amount) {
-              throw new Error('Insufficient funds!');
-            }
-
-            const newBalance = balance + amount * factor;
-
-            // Build a transaction record
-            const transaction = {
-              balance: newBalance,
-              amount,
-              account,
-              factor,
-              assoc
-            };
-
-
-            return [
-              // Set the new balance
-              setBalance({[account]: newBalance}),
-              // Add a transaction log
-              addTransaction(transaction)
-            ];
-          })
+          .flatMap(balance =>
+            Rx.Observable.if(
+              //Detect an overdraft
+              () => factor < 0 && balance < amount,
+              Rx.Observable.throw(new Error('Insufficient funds!')),
+              Rx.Observable.of(balance)
+                .map(principle => principle + amount * factor)
+                .flatMap(newBalance => [
+                  setBalance({[account]: newBalance}),
+                  addTransaction({
+                    balance: newBalance,
+                    amount,
+                    account,
+                    factor
+                  })
+              ])))
           // Handle a transaction error by sending an error action
           .catch(err => Rx.Observable.of(displayMessage(err.message, 'danger')));
       }

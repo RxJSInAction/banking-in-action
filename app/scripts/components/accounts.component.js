@@ -23,7 +23,7 @@
     componentDidMount() {
     },
     render() {
-      const app = this.props.app;
+      const {dispatch} = this.props.app;
       const {amount, withdraw, deposit, account} = balanceActions;
       const {Panel, FormGroup, InputGroup, FormControl, Col, ControlLabel, Button, ButtonToolbar, Radio, RadioGroup} = ReactBootstrap;
       return (
@@ -35,7 +35,7 @@
                   React.createElement(InputGroup.Addon, null, '$'),
                   React.createElement(FormControl, {
                     type: 'number',
-                    onChange: (e) => app.dispatch(amount(e.target.value))
+                    onChange: (e) => dispatch(amount(e.target.value))
                   })
                 )
               ),
@@ -43,19 +43,19 @@
                 React.createElement(ButtonToolbar, null,
                   React.createElement(Button, {
                     bsStyle: 'primary',
-                    onClick: () => app.dispatch(withdraw())
+                    onClick: () => dispatch(withdraw())
                   }, 'Withdraw'),
-                  React.createElement(Button, {bsStyle: 'primary', onClick: () => app.dispatch(deposit())}, 'Deposit'),
+                  React.createElement(Button, {bsStyle: 'primary', onClick: () => dispatch(deposit())}, 'Deposit'),
                   React.createElement(FormGroup, {},
                     React.createElement(Radio, {
                       name: 'account',
                       inline: true,
-                      onChange: () => app.dispatch(account('checking'))
+                      onChange: () => dispatch(account('checking'))
                     }, 'Checking'),
                     React.createElement(Radio, {
                       name: 'account',
                       inline: true,
-                      onChange: () => balanceActions.account('savings')
+                      onChange: () => account('savings')
                     }, 'Savings')
                   )
                 )
