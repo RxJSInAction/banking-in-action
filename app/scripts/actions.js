@@ -9,22 +9,21 @@
  * Balances
  */
 const REFRESH_BALANCES = 'REFRESH_BALANCES';
-const SET_BALANCE = 'SET_BALANCE';
+const SET_BALANCES = 'SET_BALANCES';
 const PROCESS_TRANSACTION = 'PROCESS_TRANSACTION';
-const UPDATE_AMOUNT = 'UPDATE_AMOUNT';
-const UPDATE_ACCOUNT = 'UPDATE_ACCOUNT';
+const SET_TRANSACTION_FIELD = 'SET_TRANSACTION_FIELD';
 
-const setBalance = (balances) =>
-  ({type: SET_BALANCE, balances});
+const setBalances = (balances) =>
+  ({type: SET_BALANCES, balances});
 
 const refreshBalances = () =>
   ({type: REFRESH_BALANCES});
 
 const balanceActions = {
-  withdraw: () => ({type: PROCESS_TRANSACTION, factor: -1}),
-  deposit: () => ({type: PROCESS_TRANSACTION, factor: 1}),
-  amount: (value) => ({type: UPDATE_AMOUNT, amount: value}),
-  account: (value = 'checking') => ({type: UPDATE_ACCOUNT, account: value})
+  withdraw: () => ({type: PROCESS_TRANSACTION, value: -1}),
+  deposit: () => ({type: PROCESS_TRANSACTION, value: 1}),
+  amount: (value) => ({type: SET_TRANSACTION_FIELD, value, field: 'amount'}),
+  account: (value) => ({type: SET_TRANSACTION_FIELD, value, field: 'account'})
 };
 
 /**
@@ -64,7 +63,6 @@ const startSearch = (query) =>
  */
 const NEW_TRANSACTION = 'NEW_TRANSACTION';
 const ADD_TRANSACTION = 'ADD_TRANSACTION';
-const CHANGE_VIEW = 'CHANGE_VIEW';
 
 // Build a message for adding a new transaction.
 const addTransaction = (transaction) =>

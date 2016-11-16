@@ -10,11 +10,21 @@
 // A custom utility operator for only accepting messages
 // of a certain type
   /**
-   * @param target {string}
+   * @param targets {string[]}
    * @returns {function(*): boolean}
    */
-  function ofType(target) {
-    return ({type}) => type === target;
+  Rx.Observable.prototype.ofType = function (...targets) {
+    return this.filter(type => {
+      switch (targets.length) {
+        case 0:
+          throw new Error('Must define at least one filter type');
+        case 1:
+          return targets[0] === type;
+        default:
+          return targets.indexOf(type) > -1;
+      }
+
+    });
   }
 
   function createMiddleware(store, factories) {
