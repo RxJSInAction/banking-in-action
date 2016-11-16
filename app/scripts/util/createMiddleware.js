@@ -17,32 +17,26 @@
     return ({type}) => type === target;
   }
 
-  function createMiddleware(store, streams$) {
+  function createMiddleware(store, factories) {
 
     const {Subject, Observable} = Rx;
 
-    const store$ = Observable.from(store)
-      .map(() => store.getState())
-      .publishBehavior(store.getState());
-
     const input$ = new Subject();
+    const output$ = Observable.from(store)
+      .map(() => store.getState())
+      .publishBehavior(store.getState())
+      .refCount();
 
-    const dispatch = (value) => input$.next(value);
-    const getState$ = () => store$;
+    const action$ = factories.map(processor => processor(input$, output$));
 
-    const subscription =
-      Observable.merge(
-        ...streams$.map(processor => processor(input$, store$))
-      )
-        .do(input$)
-        .subscribe(action => store.dispatch(action));
+    const combined$ = Observable.merge(...action$).publish().refCount();
 
-    subscription.add(store$.connect());
+    const sub1 = combined$.subscribe(input$);
+    const sub2 = combined$.subscribe(action => store.dispatch(action));
 
     return {
-      dispatch: dispatch,
-      getState$: getState$,
-      unsubscribe: () => subscription.unsubscribe()
+      dispatch: (value) => { input$.next(value); },
+      get output$() { return output$; }
     };
 
   }

@@ -17,7 +17,6 @@
 
       this.sub = this.props.state
         .distinctUntilKeyChanged('transactions')
-        .pluck('transactions')
         .map(({skip, limit, transactions}) => {
           return R.slice(skip, skip + limit, transactions);
         })

@@ -26,12 +26,15 @@
   // Initial application state
   const initialState = {
     accounts: {checking: 100, savings: 100},
-    transactions: {transactions: [], limit: 10, skip: 0},
+    transactions: [],
     messages: [],
-    searches: {query: '', results: []}
+    query: '',
+    results: [],
+    skip: 0,
+    limit: 10
   };
 
-  const initialStreams$ = [
+  const middlewareFactories = [
     handleSearch,
     updateMessages,
     processUserTransaction,
@@ -42,10 +45,10 @@
   ];
 
   // Builds the global store with reducers and an initial state
-  const rootStore = createStore(rootReducer, initialState);
+  const store = createStore(reducer, initialState);
 
   // Creates a set of middleware components
-  const app = createMiddleware(rootStore, initialStreams$);
+  const app = createMiddleware(store, middlewareFactories);
 
 
   Observable.fromEvent(window, 'load')
@@ -53,7 +56,7 @@
       () => {
         const rootNode = document.getElementById('root');
 
-        const App = React.createClass({
+        const BankingInAction = React.createClass({
           render() {
             const {Grid} = ReactBootstrap;
             const {state, app} = this.props;
@@ -71,7 +74,7 @@
 
         //Render the Application
         ReactDOM.render(
-          React.createElement(App, {state: app.getState$(), app: app}),
+          React.createElement(BankingInAction, {state: app.output$, app: app}),
           rootNode);
       },
       err => console.error(err)
