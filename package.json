@@ -5,8 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "mocha",
-    "start": "npm install && bower install && npm run gulp",
-    "lite": "lite-server",
+    "start": "npm install && npm run gulp",
     "gulp": "gulp"
   },
   "keywords": [
@@ -19,7 +18,6 @@
   "license": "MIT",
   "devDependencies": {
     "chai": "^3.5.0",
-    "concurrently": "^2.0.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
     "gulp-jshint": "^2.0.1",
@@ -28,13 +26,17 @@
     "gulp-serve": "^1.4.0",
     "gulp-uglify": "^2.0.0",
     "jshint": "^2.9.3",
-    "lite-server": "^2.2.0",
-    "mocha": "^3.1.2"
+    "mocha": "^3.2.0"
   },
   "dependencies": {
     "bootstrap": "^3.3.6",
     "moment": "^2.14.1",
+    "pouchdb": "^6.1.0",
     "ramda": "^0.22.1",
-    "rxjs": "5.0.0-beta.11"
+    "react": "^15.4.1",
+    "react-bootstrap": "^0.30.7",
+    "react-dom": "^15.4.1",
+    "redux": "^3.6.0",
+    "rxjs": "5.0.1"
   }
 }

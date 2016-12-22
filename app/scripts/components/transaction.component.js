@@ -15,7 +15,7 @@
     },
     componentDidMount() {
 
-      this.sub = this.props.state
+      this.sub = this.props.appState$
         .distinctUntilKeyChanged('transactions')
         .map(({skip, limit, transactions}) => {
           return R.slice(skip, skip + limit, transactions);

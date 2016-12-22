@@ -13,47 +13,54 @@
    * @param targets {string[]}
    * @returns {function(*): boolean}
    */
-  Rx.Observable.prototype.ofType = function (...targets) {
+  Rx.Observable.prototype.ofType = function (...types) {
     return this.filter(type => {
-      switch (targets.length) {
+      switch (types.length) {
         case 0:
           throw new Error('Must define at least one filter type');
         case 1:
-          return targets[0] === type;
+          return types[0] === type;
         default:
-          return targets.indexOf(type) > -1;
+          return types.indexOf(type) > -1;
       }
 
     });
-  }
+  };
 
-  function createMiddleware(store, factories) {
-
-    const {Subject, Observable} = Rx;
-
-    const input$ = new Subject();
-    const output$ = Observable.from(store)
+  function createStreamFromStore(store) {
+    return Rx.Observable.from(store)
       .map(() => store.getState())
       .publishBehavior(store.getState())
       .refCount();
+  }
 
-    const action$ = factories.map(processor => processor(input$, output$));
+  function createMiddleware(store, epics) {
 
-    const combined$ = Observable.merge(...action$).publish().refCount();
+    const input$ = new Rx.Subject();
 
-    const sub1 = combined$.subscribe(input$);
-    const sub2 = combined$.subscribe(action => store.dispatch(action));
+    const actions =
+      epics.map(epic =>
+        epic(input$, store));
+
+    const combinedActions$ = Rx.Observable
+      .merge(...actions)
+      .publish();
+
+    combinedActions$.subscribe(input$);
+    combinedActions$.subscribe(action => store.dispatch(action));
+
+    const sub = combinedActions$.connect();
 
     return {
-      dispatch: (value) => { input$.next(value); },
-      get output$() { return output$; }
+      dispatch: (action) => input$.next(action),
+      unsubscribe: () => sub.unsubscribe()
     };
 
   }
 
   root.DispatcherUtils = {
-    ofType,
-    createMiddleware
+    createMiddleware,
+    createStreamFromStore
   };
 
 })(window);

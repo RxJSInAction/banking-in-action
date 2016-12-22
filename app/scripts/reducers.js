@@ -42,8 +42,6 @@ function reducer(state = {
       return R.set(resultsLens, action.results, state);
     case ADD_TRANSACTION:
       return R.over(transactionsLens, R.prepend(action.transaction), state);
-    // case CHANGE_VIEW:
-    //   return R.merge(state, R.pick(['skip', 'limit'], action));
     default:
       return state;
   }

@@ -5,8 +5,6 @@
  *  @author Luis Atencio
  */
 
-const {ofType} = DispatcherUtils;
-
 // Compute the result of a transaction
 const computeTransaction = (transaction) => (balances) => {
   const {amount, account, factor} = transaction;
@@ -39,7 +37,7 @@ const updateBalances = (transaction) =>
  */
 function searchEpic(action$) {
   return action$
-    .filter(ofType(INVOKE_SEARCH))
+    .ofType(INVOKE_SEARCH)
     .debounceTime(500)
     .switchMap(
       ({query}) => search(query, {limit: 20})
@@ -48,7 +46,7 @@ function searchEpic(action$) {
 
 function messageEpic(actions$) {
   return actions$
-    .filter(ofType(DISPLAY_MESSAGE))
+    .ofType(DISPLAY_MESSAGE)
     .flatMap(
       ({message}, id) => {
         const {duration, text, severity} = message;
@@ -79,13 +77,13 @@ const byField = (expected) => ({field}) => expected === field;
 
 function userEpic(action$) {
 
-  const field$ = action$.filter(ofType('SET_TRANSACTION_FIELD'));
+  const field$ = action$.ofType('SET_TRANSACTION_FIELD');
 
   const amount$ = field$.filter(byField('amount')).pluck('value').map(x => +x);
   const account$ = field$.filter(byField('account')).pluck('value');
 
   return action$
-    .filter(ofType('PROCESS_TRANSACTION'))
+    .ofType('PROCESS_TRANSACTION')
     .pluck('value')
     .withLatestFrom(
       amount$,
@@ -94,24 +92,27 @@ function userEpic(action$) {
     );
 }
 
-function computeInterest(principle) {
-  const rounded = +((0.1 / 365 * principle).toFixed(2));
-  return newTransaction('savings', rounded, 1);
-}
+const computeInterest =  p => 0.1 / 365 * p;
 
 // Processes interest payments
-function interestEpic(action$, store$, scheduler) {
+function interestEpic(action$, store) {
   return Rx.Observable.interval(15000)
-    .switchMap(
-      () => getAccounts().pluck('savings')
-    ).map(computeInterest);
+    .map(() => store.getState())
+    .pluck('accounts')
+    .map(
+      ({savings}) => ({
+        type: 'DEPOSIT',
+        account: 'savings',
+        amount: computeInterest(savings)
+      })
+    );
 }
 
 
 
 //TODO Get this working with transaction log again
 function transactionEpic(action$) {
-  return action$.filter(ofType(NEW_TRANSACTION))
+  return action$.ofType('NEW_TRANSACTION')
     .concatMap(transaction => // amount, account, factor
       getAccounts()
         // Compute balance
@@ -120,4 +121,36 @@ function transactionEpic(action$) {
         .flatMap(transactionSuccess(transaction))
         .catch(transactionFailed)
     );
+}
+
+class Transaction {
+  constructor(name, amount, balance, timestamp) {
+    this.name = name;
+    this.amount = amount;
+    this.balance = balance;
+    this.timestamp = timestamp;
+  }
+}
+
+function transactionLogEpic(action$, store) {
+  return action$.ofType('WITHDRAW', 'DEPOSIT')
+    .timestamp()
+    .map(obj => Object.assign({}, obj.value, {timestamp: obj.timestamp}))
+    .map(action => Object.assign(
+      {},
+      action,
+      {balance: store.getState()[action.account] - action.amount}
+    ))
+    .map(({account, amount, balance, timestamp}) => new Transaction(
+      account,
+      amount,
+      balance,
+      timestamp
+    ))
+    .mergeMap(datedTx =>
+      Rx.Observable.fromPromise(txDb.put(datedTx))
+        .catch(() =>
+          Rx.Observable.of({type: 'LOG', payload: 'TX WRITE FAILURE'})
+        )
+    )
 }

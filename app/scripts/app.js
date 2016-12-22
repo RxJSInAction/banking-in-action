@@ -21,7 +21,7 @@
 
   const {Observable} = Rx;
   const {createStore} = Redux;
-  const {createMiddleware} = DispatcherUtils;
+  const {createMiddleware, createStreamFromStore} = DispatcherUtils;
 
   // Initial application state
   const initialState = {
@@ -40,14 +40,17 @@
     messageEpic,
     userEpic,
     interestEpic,
-    transactionEpic
+    transactionEpic,
+    transactionLogEpic
   ];
 
   // Builds the global store with reducers and an initial state
   const store = createStore(reducer, initialState);
 
   // Creates a set of middleware components
-  const app = createMiddleware(store, middlewareFactories);
+  const middleware = createMiddleware(store, middlewareFactories);
+
+  const state$ = createStreamFromStore(store);
 
 
   Observable.fromEvent(window, 'load')
@@ -58,22 +61,21 @@
         const BankingInAction = React.createClass({
           render() {
             const {Grid} = ReactBootstrap;
-            const {state, app} = this.props;
             return React.createElement(
               Grid, null,
-              React.createElement(MessageComponent, {state}),
+              React.createElement(MessageComponent, Object.assign({}, this.props)),
               React.createElement(NavigationComponent, {headers: headers}),
-              React.createElement(AccountBalanceComponent, {state}),
-              React.createElement(AccountWithdrawComponent, {state, app}),
-              React.createElement(PortfolioComponent, {state, app}),
-              React.createElement(TransactionsComponent, {state})
+              React.createElement(AccountBalanceComponent, Object.assign({}, this.props)),
+              React.createElement(AccountWithdrawComponent, Object.assign({}, this.props)),
+              React.createElement(PortfolioComponent, Object.assign({}, this.props)),
+              React.createElement(TransactionsComponent, Object.assign({}, this.props))
             );
           }
         });
 
         //Render the Application
         ReactDOM.render(
-          React.createElement(BankingInAction, {state: app.output$, app: app}),
+          React.createElement(BankingInAction, {appState$: state$, dispatch: middleware.dispatch}),
           rootNode);
       },
       err => console.error(err)
