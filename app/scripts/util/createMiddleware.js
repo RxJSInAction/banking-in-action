@@ -10,20 +10,20 @@
 // A custom utility operator for only accepting messages
 // of a certain type
   /**
-   * @param targets {string[]}
+   * @param types {string[]}
    * @returns {function(*): boolean}
    */
   Rx.Observable.prototype.ofType = function (...types) {
-    return this.filter(type => {
-      switch (types.length) {
+    const len = types.length;
+    return this.filter(({type}) => {
+      switch (len) {
         case 0:
-          throw new Error('Must define at least one filter type');
+          throw new Error('Must define at least one filter type!');
         case 1:
           return types[0] === type;
         default:
           return types.indexOf(type) > -1;
       }
-
     });
   };
 
@@ -51,11 +51,14 @@
 
     const sub = combinedActions$.connect();
 
+    input$.subscribe({
+      error: err => console.warn(err)
+    });
+
     return {
       dispatch: (action) => input$.next(action),
       unsubscribe: () => sub.unsubscribe()
     };
-
   }
 
   root.DispatcherUtils = {

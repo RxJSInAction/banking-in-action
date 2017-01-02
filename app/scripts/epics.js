@@ -5,32 +5,13 @@
  *  @author Luis Atencio
  */
 
-// Compute the result of a transaction
-const computeTransaction = (transaction) => (balances) => {
-  const {amount, account, factor} = transaction;
-
-  const target = balances[account];
-
-  const newBalance = target + amount * factor;
-
-  return Rx.Observable.if(
-    () => factor < 0 && newBalance < 0,
-    Rx.Observable.throw(new Error('Insufficient Balance')),
-    Rx.Observable.of(Object.assign({}, balances, {[account]: newBalance}))
-  );
-};
-
-const transactionSuccess = (transaction) => (newBalances) => ([
-  setBalances(Object.assign({}, newBalances)),
-  addTransaction(Object.assign({}, transaction, {balance: newBalances[transaction.account]}))
-]);
+const transactionSuccess = (store) => (newBalances) => (
+  setBalances(Object.assign({}, store.getState()['accounts'], newBalances))
+);
 
 const transactionFailed = (err) => Rx.Observable.of(displayMessage(err.message, 'danger'));
 
 const getAccounts = () => Rx.Observable.fromPromise(accountsDB.get('accounts'));
-
-const updateBalances = (transaction) =>
-  Rx.Observable.fromPromise(accountsDB.put(transaction)).map(() => transaction);
 
 /**
  * SEARCH
@@ -73,23 +54,28 @@ function initializeEpic() {
     });
 }
 
-const byField = (expected) => ({field}) => expected === field;
 
 function userEpic(action$) {
 
-  const field$ = action$.ofType('SET_TRANSACTION_FIELD');
-
-  const amount$ = field$.filter(byField('amount')).pluck('value').map(x => +x);
-  const account$ = field$.filter(byField('account')).pluck('value');
-
-  return action$
-    .ofType('PROCESS_TRANSACTION')
+  const amountChanged$ = action$
+    .ofType('AMOUNT_CHANGED')
     .pluck('value')
-    .withLatestFrom(
-      amount$,
-      account$,
-      (factor, amount, account) => newTransaction(account, amount, factor)
-    );
+    .map(x => +x);
+
+  const accountChanged$ = action$
+    .ofType('ACCOUNT_CHANGED')
+    .pluck('value');
+
+  const type$ = action$
+    .ofType('TRANSACTION_START')
+    .do(x => console.log('Transaction started'))
+    .pluck('value');
+
+  return type$.withLatestFrom(
+      amountChanged$,
+      accountChanged$,
+      (type, amount, account) => ({type, amount, account})
+    ).do(x => console.log(x))
 }
 
 const computeInterest =  p => 0.1 / 365 * p;
@@ -108,20 +94,27 @@ function interestEpic(action$, store) {
     );
 }
 
-
-
-//TODO Get this working with transaction log again
-function transactionEpic(action$) {
-  return action$.ofType('NEW_TRANSACTION')
-    .concatMap(transaction => // amount, account, factor
-      getAccounts()
-        // Compute balance
-        .flatMap(computeTransaction(transaction))
-        .flatMap(updateBalances)
-        .flatMap(transactionSuccess(transaction))
-        .catch(transactionFailed)
-    );
+function transactionEpic(action$, store) {
+  return action$.ofType('ADD_TRANSACTION')
+    .pluck('datedTx')
+    .map(transaction => {
+      const {name, balance} = transaction;
+      return transactionSuccess(store)({[name]: balance});
+    });
 }
+
+// function transactionEpic(action$, store) {
+//   return action$.ofType('ADD_TRANSACTION')
+//     .concatMap(transaction => // amount, account, timestamp, balance
+//       getAccounts()
+//         .flatMap(() =>
+//           Rx.Observable.fromPromise(accountsDB.put(transaction))
+//             .mapTo(transaction)
+//         )
+//         .mapTo(transactionSuccess(store)({[transaction.account]: transaction.balance}))
+//         .catch(transactionFailed)
+//     );
+// }
 
 class Transaction {
   constructor(name, amount, balance, timestamp) {
@@ -132,6 +125,13 @@ class Transaction {
   }
 }
 
+const validate = (validator, onFail) => (tx) =>
+  Rx.Observable.if(() => {
+    return validator(tx)
+  }, Rx.Observable.of(tx), onFail);
+
+const overdraftValidator = (tx) => tx.balance >= 0 || tx.amount >= 0;
+
 function transactionLogEpic(action$, store) {
   return action$.ofType('WITHDRAW', 'DEPOSIT')
     .timestamp()
@@ -139,7 +139,9 @@ function transactionLogEpic(action$, store) {
     .map(action => Object.assign(
       {},
       action,
-      {balance: store.getState()[action.account] - action.amount}
+      {
+        balance: store.getState().accounts[action.account] + action.amount
+      }
     ))
     .map(({account, amount, balance, timestamp}) => new Transaction(
       account,
@@ -148,9 +150,19 @@ function transactionLogEpic(action$, store) {
       timestamp
     ))
     .mergeMap(datedTx =>
-      Rx.Observable.fromPromise(txDb.put(datedTx))
-        .catch(() =>
-          Rx.Observable.of({type: 'LOG', payload: 'TX WRITE FAILURE'})
-        )
-    )
+      validate(overdraftValidator, Rx.Observable.throw('OVERDRAFT'))(datedTx)
+        .mapTo({type: 'ADD_TRANSACTION', datedTx})
+        .catch(err => {
+          Rx.Observable.of({type: 'LOG', payload: `TX WRITE FAILURE: ${err.message}`})
+        })
+    );
 }
+
+const loggingEpic = (action$) => action$
+  .do(
+    action => {
+      console.log(`Dispatch [${action.type}]`, action)
+    },
+    err => console.error(err)
+  )
+  .ignoreElements();

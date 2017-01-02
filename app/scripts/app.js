@@ -41,7 +41,8 @@
     userEpic,
     interestEpic,
     transactionEpic,
-    transactionLogEpic
+    transactionLogEpic,
+    loggingEpic
   ];
 
   // Builds the global store with reducers and an initial state

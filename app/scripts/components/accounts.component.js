@@ -26,7 +26,7 @@
       const {dispatch} = this.props;
       const {amount, withdraw, deposit, account} = balanceActions;
       const {createElement} = React;
-      const {Panel, FormGroup, InputGroup, FormControl, Col, Button, ButtonToolbar, Radio, RadioGroup} = ReactBootstrap;
+      const {Panel, FormGroup, InputGroup, FormControl, Col, Button, ButtonToolbar, Radio} = ReactBootstrap;
       return (
         createElement(Panel, null,
           createElement(FormGroup, {bsSize: 'small'},
@@ -36,7 +36,7 @@
                   createElement(InputGroup.Addon, null, '$'),
                   createElement(FormControl, {
                     type: 'number',
-                    onChange: (e) => dispatch(amount(e.target.value))
+                    onChange: (e) => dispatch({type: 'AMOUNT_CHANGED', value: e.target.value})
                   })
                 )
               ),
@@ -46,17 +46,19 @@
                     bsStyle: 'primary',
                     onClick: () => dispatch(withdraw())
                   }, 'Withdraw'),
-                  createElement(Button, {bsStyle: 'primary', onClick: () => dispatch(deposit())}, 'Deposit'),
+                  createElement(Button, {bsStyle: 'primary',
+                    onClick: () => dispatch(deposit())
+                  }, 'Deposit'),
                   createElement(FormGroup, {},
                     createElement(Radio, {
                       name: 'account',
                       inline: true,
-                      onChange: () => dispatch(account('checking'))
+                      onChange: () => dispatch({type: 'ACCOUNT_CHANGED', value: 'checking'})
                     }, 'Checking'),
                     createElement(Radio, {
                       name: 'account',
                       inline: true,
-                      onChange: () => account('savings')
+                      onChange: () => dispatch({type: 'ACCOUNT_CHANGED', value: 'savings'})
                     }, 'Savings')
                   )
                 )

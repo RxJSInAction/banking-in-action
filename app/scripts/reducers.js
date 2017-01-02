@@ -22,6 +22,9 @@ function reducer(state = {
   query: ''
 }, action) {
   switch(action.type) {
+    case 'LOG':
+      console.log(`LOG: ${action.payload}`);
+      return state;
     case SET_BALANCES:
       const newAccountState = R.merge(R.view(accountsLens, state), action.balances);
       return R.set(accountsLens, newAccountState, state);
@@ -41,7 +44,7 @@ function reducer(state = {
     case SET_SEARCH_RESULTS:
       return R.set(resultsLens, action.results, state);
     case ADD_TRANSACTION:
-      return R.over(transactionsLens, R.prepend(action.transaction), state);
+      return R.over(transactionsLens, R.prepend(action.datedTx), state);
     default:
       return state;
   }
