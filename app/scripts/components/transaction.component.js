@@ -38,20 +38,20 @@
       const {tr, td} = React.DOM;
 
       return this.state.transactions.map((tx, key) => {
-        const {timestamp, factor, description, amount, account, balance} = tx;
-        const type = factor < 0 ? 'withdraw' : 'deposit';
+        const {timestamp, name, amount, balance} = tx;
+        const type = amount < 0 ? 'withdraw' : 'deposit';
 
         return tr({key},
           td(null, moment(timestamp).format('MM / DD / YYYY')),
           td(null, type),
-          td(null, account),
+          td(null, name),
           td(null, `$${amount.toFixed(2)}`),
           td(null, `$${balance.toFixed(2)}`)
         );
       });
     },
     render() {
-      const {table, tbody} = React.DOM;
+      const {tbody} = React.DOM;
       const {Table} = ReactBootstrap;
 
       return (

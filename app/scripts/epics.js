@@ -74,8 +74,12 @@ function userEpic(action$) {
   return type$.withLatestFrom(
       amountChanged$,
       accountChanged$,
-      (type, amount, account) => ({type, amount, account})
-    ).do(x => console.log(x))
+      (type, amount, account) => ({
+        type,
+        amount: amount * (type === 'DEPOSIT' ? 1 : -1),
+        account
+      })
+    );
 }
 
 const computeInterest =  p => 0.1 / 365 * p;
@@ -103,19 +107,6 @@ function transactionEpic(action$, store) {
     });
 }
 
-// function transactionEpic(action$, store) {
-//   return action$.ofType('ADD_TRANSACTION')
-//     .concatMap(transaction => // amount, account, timestamp, balance
-//       getAccounts()
-//         .flatMap(() =>
-//           Rx.Observable.fromPromise(accountsDB.put(transaction))
-//             .mapTo(transaction)
-//         )
-//         .mapTo(transactionSuccess(store)({[transaction.account]: transaction.balance}))
-//         .catch(transactionFailed)
-//     );
-// }
-
 class Transaction {
   constructor(name, amount, balance, timestamp) {
     this.name = name;
@@ -126,9 +117,7 @@ class Transaction {
 }
 
 const validate = (validator, onFail) => (tx) =>
-  Rx.Observable.if(() => {
-    return validator(tx)
-  }, Rx.Observable.of(tx), onFail);
+  Rx.Observable.if(() => validator(tx), Rx.Observable.of(tx), onFail);
 
 const overdraftValidator = (tx) => tx.balance >= 0 || tx.amount >= 0;
 
