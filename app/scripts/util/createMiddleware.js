@@ -10,40 +10,60 @@
 // A custom utility operator for only accepting messages
 // of a certain type
   /**
-   * @param target {string}
+   * @param types {string[]}
    * @returns {function(*): boolean}
    */
-  function ofType(target) {
-    return ({type}) => type === target;
-  }
+  Rx.Observable.prototype.ofType = function (...types) {
+    const len = types.length;
+    return this.filter(({type}) => {
+      switch (len) {
+        case 0:
+          throw new Error('Must define at least one filter type!');
+        case 1:
+          return types[0] === type;
+        default:
+          return types.indexOf(type) > -1;
+      }
+    });
+  };
 
-  function createMiddleware(store, factories) {
-
-    const {Subject, Observable} = Rx;
-
-    const input$ = new Subject();
-    const output$ = Observable.from(store)
+  function createStreamFromStore(store) {
+    return Rx.Observable.from(store)
       .map(() => store.getState())
       .publishBehavior(store.getState())
       .refCount();
+  }
 
-    const action$ = factories.map(processor => processor(input$, output$));
+  function createMiddleware(store, epics) {
 
-    const combined$ = Observable.merge(...action$).publish().refCount();
+    const input$ = new Rx.Subject();
 
-    const sub1 = combined$.subscribe(input$);
-    const sub2 = combined$.subscribe(action => store.dispatch(action));
+    const actions =
+      epics.map(epic =>
+        epic(input$, store));
+
+    const combinedActions$ = Rx.Observable
+      .merge(...actions)
+      .publish();
+
+    combinedActions$.subscribe(input$);
+    combinedActions$.subscribe(action => store.dispatch(action));
+
+    const sub = combinedActions$.connect();
+
+    input$.subscribe({
+      error: err => console.warn(err)
+    });
 
     return {
-      dispatch: (value) => { input$.next(value); },
-      get output$() { return output$; }
+      dispatch: (action) => input$.next(action),
+      unsubscribe: () => sub.unsubscribe()
     };
-
   }
 
   root.DispatcherUtils = {
-    ofType,
-    createMiddleware
+    createMiddleware,
+    createStreamFromStore
   };
 
 })(window);

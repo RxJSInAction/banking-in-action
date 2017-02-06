@@ -5,21 +5,18 @@
   <title>Banking in Action</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!--<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">-->
   <link rel="stylesheet" href="vendor/styles/bootstrap-darkly.min.css">
   <link rel="stylesheet" href="styles.css">
 
   <!-- 1. Load libraries -->
-  <script src="vendor/Rx.umd.js"></script>
+  <script src="node_modules/rxjs/bundles/Rx.js"></script>
   <script src="node_modules/ramda/dist/ramda.js"></script>
   <script src="node_modules/moment/moment.js"></script>
-  <script src="bower_components/react/react.js"></script>
-  <script src="bower_components/react/react-dom.js"></script>
-  <script src="bower_components/pouchdb/dist/pouchdb.js"></script>
-  <script src="bower_components/pouchdb-upsert/dist/pouchdb.upsert.js"></script>
-  <script src="bower_components/react-bootstrap/react-bootstrap.min.js"></script>
-  <script src="bower_components/redux/index.js"></script>
-  <!-- IE required polyfill -->
+  <script src="node_modules/react/dist/react.js"></script>
+  <script src="node_modules/react-dom/dist/react-dom.js"></script>
+  <script src="node_modules/pouchdb/dist/pouchdb.js"></script>
+  <script src="node_modules/react-bootstrap/dist/react-bootstrap.js"></script>
+  <script src="node_modules/redux/dist/redux.js"></script>
 
 
 </head>
@@ -41,7 +38,12 @@
 <script src="app/scripts/db.js"></script>
 <script src="app/scripts/actions.js"></script>
 <script src="app/scripts/reducers.js"></script>
-<script src="app/scripts/streams.js"></script>
+<script src="app/scripts/epics/interest.js"></script>
+<script src="app/scripts/epics/search.js"></script>
+<script src="app/scripts/epics/transaction.js"></script>
+<script src="app/scripts/epics/user.js"></script>
+<script src="app/scripts/epics/message.js"></script>
+<script src="app/scripts/epics/logging.js"></script>
 
 <!-- Components -->
 <script src="app/scripts/components/accounts.component.js"></script>

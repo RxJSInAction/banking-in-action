@@ -98,14 +98,14 @@ describe('Balances', () => {
       const expected$ =      '--c--c';
 
       scheduler.expectObservable(
-        initialize$(fakeDB)(input$)
+        initializeEpic(fakeDB)(input$)
       ).toBe(expected$, mappings);
 
       scheduler.flush();
     });
   });
 
-  describe('#userTransaction$', () => {
+  describe('#userEpic', () => {
 
     it('should emit a new transaction', () => {
 
@@ -123,7 +123,7 @@ describe('Balances', () => {
       const store$ = Rx.Observable.empty();
 
       scheduler.expectObservable(
-        userTransaction$(action$, store$)
+        userEpic(action$, store$)
       ).toBe(
         '-----d',
         expectMapping
@@ -137,7 +137,7 @@ describe('Balances', () => {
     });
   });
 
-  describe('#interest$', () => {
+  describe('#interestEpic', () => {
     it('should accumulate interest', () => {
 
       const expectMapping = {

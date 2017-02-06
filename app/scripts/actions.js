@@ -8,22 +8,17 @@
 /**
  * Balances
  */
-const REFRESH_BALANCES = 'REFRESH_BALANCES';
 const SET_BALANCES = 'SET_BALANCES';
-const PROCESS_TRANSACTION = 'PROCESS_TRANSACTION';
 const SET_TRANSACTION_FIELD = 'SET_TRANSACTION_FIELD';
 
 const setBalances = (balances) =>
   ({type: SET_BALANCES, balances});
 
-const refreshBalances = () =>
-  ({type: REFRESH_BALANCES});
-
 const balanceActions = {
-  withdraw: () => ({type: PROCESS_TRANSACTION, value: -1}),
-  deposit: () => ({type: PROCESS_TRANSACTION, value: 1}),
-  amount: (value) => ({type: SET_TRANSACTION_FIELD, value, field: 'amount'}),
-  account: (value) => ({type: SET_TRANSACTION_FIELD, value, field: 'account'})
+  withdraw: () => ({type: 'TRANSACTION_START', value: 'WITHDRAW'}),
+  deposit: () => ({type: 'TRANSACTION_START', value: 'DEPOSIT'}),
+  amount: (value) => ({type: 'SET_TRANSACTION_FIELD', value, field: 'amount'}),
+  account: (value) => ({type: 'SET_TRANSACTION_FIELD', value, field: 'account'})
 };
 
 /**

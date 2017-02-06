@@ -3,6 +3,8 @@
  *  Chapter #
  *  @author Paul Daniels
  *  @author Luis Atencio
+ *
+ *  A Custom search algorithm to "simulate" an asynchronous search API.
  */
 
 const futureCorpus = fetch('/resources/dictionary.json')
@@ -35,6 +37,8 @@ self.onmessage = function(e) {
         //Check the current sample against possible matches
         let isMatch = matcher(curr.code, lcQuery);
 
+        // If we have a match then add it to the results
+        // Or optionally skip it
         if (isMatch) {
           if (++k < skip) {
             continue;

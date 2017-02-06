@@ -19,7 +19,7 @@
       return {messages: []};
     },
     componentDidMount() {
-      this.props.state
+      this.props.appState$
         .distinctUntilKeyChanged('messages')
         .pluck('messages')
         .subscribe(messages => {

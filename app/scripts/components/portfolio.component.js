@@ -13,7 +13,7 @@
       return {matches: []};
     },
     componentWillMount() {
-      this.props.state
+      this.props.appState$
         .distinctUntilKeyChanged('searches')
         .pluck('searches', 'results')
         .subscribe(matches => {
@@ -24,7 +24,7 @@
     },
     render() {
       return (
-        React.createElement(Typeahead, {state: this.props.state, app: this.props.app})
+        React.createElement(Typeahead, Object.assign({}, this.props))
       );
     }
   });
@@ -94,13 +94,12 @@
   window.PortfolioComponent = (props) => {
     const { createElement } = React;
     const { Panel } = ReactBootstrap;
-    const { state, app } = props;
 
     return (
       React.createElement(
         Panel, { header: 'Portfolio' },
-        createElement(StockSearch, {state, app}),
-        createElement(FilteredItemView, {state})
+        createElement(StockSearch, Object.assign({}, props)),
+        createElement(FilteredItemView, Object.assign({}, props))
       )
     );
   };

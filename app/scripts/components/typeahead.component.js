@@ -20,7 +20,7 @@
         return {items: []};
       },
       componentDidMount() {
-        this.props.state
+        this.props.appState$
           .distinctUntilKeyChanged('results')
           .pluck('results')
           .subscribe(results => this.setState({items: results}))
@@ -40,12 +40,12 @@
 
     });
 
-  const Typeahead = window.Typeahead = ({app}) => {
+  const Typeahead = window.Typeahead = ({dispatch}) => {
     const {FormControl} = ReactBootstrap;
     return (
       React.createElement(FormControl, {
         autoComplete: 'off',
-        onChange: (e) => app.dispatch(startSearch(e.target.value))
+        onChange: (e) => dispatch(startSearch(e.target.value))
       })
     );
   };
