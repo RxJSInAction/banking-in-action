@@ -5,19 +5,19 @@
  *  @author Luis Atencio
  */
 'use strict';
-(function () {
+(function() {
 // Start configuration step here
 // 1) Check logged in status
 // 2) Force log-in
 // 3) Use log-in token to get dashboard set-up information
 
-  /* Action Items:
-   *
-   * 1) Data (stocks, accounts, transactions, routing?)
-   * 2) Tool to build transaction history
-   * 3) Tool to build stock history
+/* Action Items:
+*
+* 1) Data (stocks, accounts, transactions, routing?)
+* 2) Tool to build transaction history
+* 3) Tool to build stock history
 
-   * */
+* */
 
   const {Observable} = Rx;
   const {createStore} = Redux;
