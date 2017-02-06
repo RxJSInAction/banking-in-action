@@ -24,7 +24,7 @@
     },
     render() {
       const {dispatch} = this.props;
-      const {amount, withdraw, deposit, account} = balanceActions;
+      const {withdraw, deposit, account} = balanceActions;
       const {createElement} = React;
       const {Panel, FormGroup, InputGroup, FormControl, Col, Button, ButtonToolbar, Radio} = ReactBootstrap;
       return (

@@ -4,6 +4,7 @@
  *  @author Paul Daniels
  *  @author Luis Atencio
  */
+
 function userEpic(action$) {
   return action$.ofType('TRANSACTION_START')
     .map(({value}) => value)

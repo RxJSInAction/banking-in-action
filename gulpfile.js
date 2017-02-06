@@ -1,14 +1,14 @@
 
 
-var gulp = require('gulp');
+let gulp = require('gulp');
 
 //Plugins
-var jshint = require('gulp-jshint');
-var sass = require('gulp-sass');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var rename = require('gulp-rename');
-var serve  = require('gulp-serve');
+let jshint = require('gulp-jshint');
+let sass = require('gulp-sass');
+let concat = require('gulp-concat');
+let uglify = require('gulp-uglify');
+let rename = require('gulp-rename');
+let serve  = require('gulp-serve');
 
 gulp.task('lint', function() {
   return gulp.src('js/*.js')
@@ -39,9 +39,7 @@ gulp.task('watch', function() {
   gulp.watch('scss/*.scss', ['sass']);
 });
 
-
 gulp.task('serve', serve('.'));
-
 
 // Default Task
 gulp.task('default', ['lint', 'sass', 'scripts', 'serve', 'watch']);
