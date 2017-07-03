@@ -6,9 +6,9 @@
  */
 const expect = chai.expect;
 
-// function assertDeepEqual(actual, expected) { //#A
-//   expect(actual).to.deep.equal(expected);
-// }
+function assertDeepEqual(actual, expected) { //#A
+  expect(actual).to.deep.equal(expected);
+}
 
 function stringify(x) {
   return JSON.stringify(x, function (key, value) {
@@ -79,26 +79,19 @@ describe('Balances', () => {
     it('should zero the balances on error', () => {
 
       const fakeDB = {
-        accounts: {
-          get: () => scheduler.createColdObservable('--#')
-        }
+          get: () => scheduler.createColdObservable('--#'),
+          put: () => scheduler.createColdObservable('-x')
       };
 
       const mappings = {
-        // The beginning balance
-        a: {checking: 10, savings: 20},
-        // Signal the update
-        b: refreshBalances(),
         // Expect the balance to be set
-        c: setBalances({checking: 0, savings: 0})
+        a: setBalances({checking: 100, savings: 100})
       };
 
-      const input$ = scheduler
-        .createHotObservable('---b', mappings);
-      const expected$ =      '--c--c';
+      const expected$ =      '---a';
 
       scheduler.expectObservable(
-        initializeEpic(fakeDB)(input$)
+        initializeEpic(fakeDB)(Rx.Observable.empty())
       ).toBe(expected$, mappings);
 
       scheduler.flush();
@@ -107,7 +100,7 @@ describe('Balances', () => {
 
   describe('#userEpic', () => {
 
-    it('should emit a new transaction', () => {
+    it('should emit a new withdraw transaction', () => {
 
       const actionMapping = {
         a: balanceActions.account('checking'),
@@ -116,7 +109,7 @@ describe('Balances', () => {
       };
 
       const expectMapping = {
-        d: newTransaction('checking', 10, -1)
+        d: newTransaction('WITHDRAW', 'checking', 10, -1)
       };
 
       const action$ = scheduler.createHotObservable('-a-b-c', actionMapping);
@@ -132,8 +125,27 @@ describe('Balances', () => {
       scheduler.flush();
     });
 
-    it('should use the latest balance', () => {
+    it('should emit a new deposit transaction', () => {
+      const actionMapping = {
+        a: balanceActions.account('savings'),
+        b: balanceActions.amount(10),
+        c: balanceActions.deposit()
+      };
 
+      const expectMapping = {
+        d: newTransaction('DEPOSIT', 'savings', 10, 1)
+      };
+
+      const action$ = scheduler.createHotObservable('-a-b-c', actionMapping);
+
+      scheduler.expectObservable(
+        userEpic(action$)
+      ).toBe(
+        '-----d',
+        expectMapping
+      );
+
+      scheduler.flush();
     });
   });
 
@@ -141,25 +153,59 @@ describe('Balances', () => {
     it('should accumulate interest', () => {
 
       const expectMapping = {
-        a: newTransaction('savings', (1), 1)
+        // Rounding error
+        a: newTransaction('DEPOSIT', 'savings', 1.0000000000000002, 1)
       };
 
-      const storeMapping = {
-        a: 365 * 10
+      const stubStore = {
+        getState() {
+          return {
+            accounts: {
+              savings: 365 * 10
+            }
+          };
+        }
       };
-
-      const balance$ = scheduler.createColdObservable('---a', storeMapping);
-      const trigger$ = scheduler.createHotObservable('---a');
 
       scheduler.expectObservable(
-        computeInterest(trigger$, balance$)
+        interestEpic(Rx.Observable.empty(), stubStore, scheduler)
       ).toBe(
-        '------a',
+        frames(15 * 100) + 'a',
         expectMapping
       );
+    });
+  });
+
+  describe('#loggingEpic', () => {
+    it('should log dispatch actions', () => {
+
+      const actionsMap = {
+        a: balanceActions.withdraw(),
+        b: balanceActions.account('savings'),
+        c: balanceActions.amount(10)
+      };
+
+      const messages = [];
+
+      const fakeConsole = {
+        log: (...args) => messages.push(args)
+      };
+
+      const action$ = scheduler.createHotObservable('-a-b-c', actionsMap);
+
+      scheduler.expectObservable(
+        loggingEpic(fakeConsole)(action$)
+      ).toBe('');
 
       scheduler.flush();
-    });
+
+      assertDeepEqual(messages, [
+        ['Dispatch [TRANSACTION_START]', actionsMap.a],
+        ['Dispatch [ACCOUNT_CHANGED]', actionsMap.b],
+        ['Dispatch [AMOUNT_CHANGED]', actionsMap.c]
+      ]);
+
+    })
   })
 
 });

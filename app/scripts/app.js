@@ -35,14 +35,14 @@
   };
 
   const middlewareFactories = [
-    initializeEpic,
+    initializeEpic(accountsDB),
     searchEpic,
     messageEpic,
     userEpic,
     interestEpic,
     transactionEpic,
     transactionLogEpic,
-    loggingEpic
+    loggingEpic()
   ];
 
   // Builds the global store with reducers and an initial state
