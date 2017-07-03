@@ -32,7 +32,6 @@
     "bootstrap": "^3.3.6",
     "connect": "^3.5.0",
     "moment": "^2.14.1",
-    "pouchdb": "^6.1.0",
     "ramda": "^0.22.1",
     "react": "^15.4.1",
     "react-bootstrap": "^0.30.7",

@@ -60,8 +60,8 @@ const getAccounts = () => Rx.Observable.fromPromise(accountsDB.get('accounts'));
 function initializeEpic() {
   return getAccounts()
     .catch(err => {
-      const defaults = {checking: 100, savings: 100};
-      return accountsDB.put('accounts', defaults)
+      const defaults = {_id: 'accounts', checking: 100, savings: 100};
+      return accountsDB.put(defaults)
         .then(() => defaults);
     })
     .map(accounts => {
