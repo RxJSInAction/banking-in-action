@@ -9,10 +9,6 @@
 
 // A custom utility operator for only accepting messages
 // of a certain type
-  /**
-   * @param types {string[]}
-   * @returns {function(*): boolean}
-   */
   Rx.Observable.prototype.ofType = function (...types) {
     const len = types.length;
     return this.filter(({type}) => {

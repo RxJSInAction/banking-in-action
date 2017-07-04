@@ -4,7 +4,7 @@
  *  @author Paul Daniels
  *  @author Luis Atencio
  */
-(function(global) {
+(function() {
 
   const Message = (props) => {
     const {Alert} = ReactBootstrap;
