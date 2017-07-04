@@ -62,7 +62,7 @@ function frames(n = 1, unit = '-') { //#A
   unit + frames(n - 1, unit);
 }
 
-
+// Example unit tests, to see, open the index.html file from the same directory in your web browser
 describe('Balances', () => {
 
   let scheduler;

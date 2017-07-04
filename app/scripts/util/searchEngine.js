@@ -15,7 +15,7 @@ class SearchQuery extends Rx.Observable {
     const { query, options, _subject } = this;
 
     // Degenerate case, if there is no data then simply return immediately
-    if (query.length == 0)
+    if (query.length === 0)
       return Rx.Observable.of([]).subscribe(observer);
 
     //The options for the search
