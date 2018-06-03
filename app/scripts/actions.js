@@ -9,7 +9,6 @@
  * Balances
  */
 const SET_BALANCES = 'SET_BALANCES';
-const SET_TRANSACTION_FIELD = 'SET_TRANSACTION_FIELD';
 
 const setBalances = (balances) =>
   ({type: SET_BALANCES, balances});
@@ -17,8 +16,8 @@ const setBalances = (balances) =>
 const balanceActions = {
   withdraw: () => ({type: 'TRANSACTION_START', value: 'WITHDRAW'}),
   deposit: () => ({type: 'TRANSACTION_START', value: 'DEPOSIT'}),
-  amount: (value) => ({type: 'SET_TRANSACTION_FIELD', value, field: 'amount'}),
-  account: (value) => ({type: 'SET_TRANSACTION_FIELD', value, field: 'account'})
+  amount: (value) => ({type: 'AMOUNT_CHANGED', value, field: 'amount'}),
+  account: (value) => ({type: 'ACCOUNT_CHANGED', value, field: 'account'})
 };
 
 /**
@@ -63,5 +62,5 @@ const ADD_TRANSACTION = 'ADD_TRANSACTION';
 const addTransaction = (transaction) =>
   ({type: ADD_TRANSACTION, transaction});
 
-const newTransaction = (account, amount, factor) =>
-  ({account, amount, factor, type: NEW_TRANSACTION});
+const newTransaction = (type, account, amount, factor) =>
+  ({account, amount: factor * amount, type});

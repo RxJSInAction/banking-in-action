@@ -4,10 +4,10 @@
  *  @author Paul Daniels
  *  @author Luis Atencio
  */
-const loggingEpic = (action$) => action$
+const loggingEpic = (console = window.console) => (action$) => action$
   .do(
     action => {
-      console.log(`Dispatch [${action.type}]`, action)
+      console.log(`Dispatching [${action.type}]`, action)
     },
     err => console.error(err)
   )

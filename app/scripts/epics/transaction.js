@@ -55,19 +55,22 @@ function transactionLogEpic(action$, store) {
     );
 }
 
-const getAccounts = () => Rx.Observable.fromPromise(accountsDB.get('accounts'));
+const getAccounts = (db) => Rx.Observable.from(db.get('accounts'));
 
-function initializeEpic() {
-  return getAccounts()
-    .catch(err => {
-      const defaults = {_id: 'accounts', checking: 100, savings: 100};
-      return accountsDB.put(defaults)
-        .then(() => defaults);
-    })
-    .map(accounts => {
-      const {checking, savings} = accounts;
-      return setBalances({checking, savings});
-    });
+function initializeEpic(db) {
+  return function() {
+    return getAccounts(db)
+      // If there is an error getting the accounts just start with some money to play with
+      .catch(err => {
+        const defaults = {_id: 'accounts', checking: 100, savings: 100};
+        return Rx.Observable.from(db.put(defaults))
+          .mapTo(defaults);
+      })
+      .map(accounts => {
+        const {checking, savings} = accounts;
+        return setBalances({checking, savings});
+      });
+  }
 }
 
 class Transaction {
